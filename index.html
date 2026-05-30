@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#f57c00" />
+  <meta name="description" content="Offline CNC lathe work notes and manual X/Z movement calculator." />
+  <link rel="manifest" href="./manifest.json" />
+  <title>CNC Lathe Helper</title>
+  <style>
+    :root{--bg:#101010;--panel:#191919;--panel2:#232323;--text:#f2f2f2;--muted:#aaa;--border:#363636;--accent:#f57c00;--accent2:#ffbd73;--danger:#ef5350;--ok:#66bb6a;--radius:18px;--shadow:0 14px 35px rgba(0,0,0,.38)}
+    *{box-sizing:border-box} html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif} body{padding:14px 14px 92px}.app{max-width:980px;margin:0 auto}
+    header{position:sticky;top:0;z-index:3;background:linear-gradient(180deg,#101010 76%,rgba(16,16,16,0));padding:8px 0 18px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:1.35rem;margin:0}.sub{margin:5px 0 0;color:var(--muted);font-size:.92rem}.badge{background:rgba(245,124,0,.16);color:var(--accent2);border:1px solid rgba(245,124,0,.42);padding:7px 10px;border-radius:999px;font-size:.78rem;white-space:nowrap}
+    .grid{display:grid;gap:12px}@media(min-width:760px){.two{grid-template-columns:1fr 1fr}.three{grid-template-columns:repeat(3,1fr)}}.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:15px}.card h2{font-size:1.05rem;margin:0 0 12px}.card h3{font-size:.95rem;margin:8px 0 10px;color:var(--accent2)}
+    label{display:block;font-size:.84rem;color:var(--muted);margin:0 0 6px}.field{margin-bottom:12px}input,select,textarea{width:100%;border:1px solid var(--border);border-radius:14px;background:#0c0c0c;color:var(--text);padding:12px;font-size:1rem;outline:none}textarea{min-height:115px;resize:vertical;line-height:1.35}input:focus,select:focus,textarea:focus{border-color:var(--accent)}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.row>*{flex:1;min-width:145px}
+    button{border:0;border-radius:14px;padding:12px 13px;background:var(--panel2);color:var(--text);font-weight:800;cursor:pointer;font-size:.96rem;touch-action:manipulation}button:active{transform:scale(.98)}.primary{background:var(--accent);color:#111}.ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}.danger{background:rgba(239,83,80,.14);color:#ffcdd2;border:1px solid rgba(239,83,80,.38)}
+    .result{border:1px solid rgba(245,124,0,.38);background:rgba(245,124,0,.09);border-radius:16px;padding:13px;margin-top:10px}.big{font-size:1.85rem;font-weight:950;color:var(--accent2);letter-spacing:.4px}.medium{font-size:1.18rem;font-weight:850;color:#fff}.hint{font-size:.84rem;color:var(--muted);line-height:1.4;margin-top:8px}.mini{font-size:.8rem;color:var(--muted)}.pill{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:5px 8px;margin:3px 4px 0 0;color:#ddd;background:#111;font-size:.78rem}
+    .list{display:grid;gap:10px}.item{background:#111;border:1px solid var(--border);border-radius:16px;padding:12px}.item strong{display:block;margin-bottom:4px}.item p{white-space:pre-wrap;margin:6px 0;color:#ddd;font-size:.92rem;line-height:1.35}.hidden{display:none!important}.footer-nav{position:fixed;left:0;right:0;bottom:0;background:rgba(18,18,18,.94);backdrop-filter:blur(10px);border-top:1px solid var(--border);padding:10px 12px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;z-index:5}.footer-nav button{font-size:.82rem;padding:10px 6px;border-radius:12px}.footer-nav .active{background:var(--accent);color:#111}code{background:#080808;border:1px solid var(--border);padding:2px 6px;border-radius:7px}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header><div class="top"><div><h1>CNC Lathe Helper</h1><p class="sub">Phase 1: manual X/Z movement + work notes. No G-code yet.</p></div><div class="badge" id="saveStatus">Offline ready</div></div></header>
+
+  <main>
+    <section id="manualView" class="view grid">
+      <div class="card">
+        <h2>Manual Lathe Move Calculator</h2>
+        <div class="row">
+          <div class="field"><label>Touch-off / current X diameter</label><input id="touchDia" inputmode="decimal" placeholder="24.000"></div>
+          <div class="field"><label>Target circle / final diameter</label><input id="targetDia" inputmode="decimal" placeholder="3.000"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Z face value</label><input id="faceZ" inputmode="decimal" placeholder="0.000"></div>
+          <div class="field"><label>Plunge depth from face</label><input id="plungeDepth" inputmode="decimal" placeholder=".500"></div>
+          <div class="field"><label>Z direction</label><select id="zDirection"><option value="minus">Into part = Z minus</option><option value="plus">Into part = Z plus</option></select></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Insert width</label><input id="insertWidth" inputmode="decimal" placeholder=".187"></div>
+          <div class="field"><label>Insert radius</label><input id="insertRadius" inputmode="decimal" placeholder=".015"></div>
+          <div class="field"><label>Tool label</label><input id="toolLabel" placeholder="DB .187 x .015"></div>
+        </div>
+        <button class="primary" id="calcManualBtn">Calculate Move</button>
+        <button id="loadLatheExampleBtn">Load 24.000 → 3.000 Example</button>
+        <div class="result" id="manualResult"><div class="mini">Target moves</div><div class="big">X -- / Z --</div><div class="hint">X is diameter based. Radial travel = (touch diameter - target diameter) ÷ 2.</div></div>
+      </div>
+
+      <div class="card">
+        <h2>What this means</h2>
+        <p class="hint">For manual movement on a lathe, the X display is normally diameter. If touch-off reads <code>X24.000</code> and the final circle/diameter is <code>3.000</code>, move to <code>X3.000</code>.</p>
+        <p class="hint">If the face is <code>Z0.000</code> and the plunge depth is <code>.500</code> into the part, target is usually <code>Z-.500</code>.</p>
+        <span class="pill">Phase 1: manual numbers</span><span class="pill">Phase 2: G-code output</span><span class="pill">Local saved jobs</span>
+      </div>
+    </section>
+
+    <section id="diameterView" class="view grid hidden">
+      <div class="card">
+        <h2>Diameter From Radial Depth</h2>
+        <div class="row"><div class="field"><label>Starting diameter</label><input id="startDia" inputmode="decimal" placeholder="24.000"></div><div class="field"><label>Radial depth</label><input id="radialDepth" inputmode="decimal" placeholder=".500"></div></div>
+        <div class="field"><label>Cut direction</label><select id="cutDirection"><option value="od">OD: move inward smaller X</option><option value="id">ID: move outward larger X</option></select></div>
+        <button class="primary" id="calcDiameterBtn">Calculate X</button>
+        <div class="result" id="diaResult"><div class="mini">Result</div><div class="big">X --</div><div class="hint">OD target X = start diameter - radial depth × 2.</div></div>
+      </div>
+    </section>
+
+    <section id="notesView" class="view grid hidden">
+      <div class="card">
+        <h2>Work Note</h2>
+        <div class="field"><label>Job / Part</label><input id="jobName" placeholder="Part, job, machine, op"></div>
+        <div class="field"><label>Operation</label><input id="operation" placeholder="Face, plunge, rough OD, finish OD..."></div>
+        <div class="field"><label>Tool / Insert</label><input id="tooling" placeholder="DB .187 x .015, T0505..."></div>
+        <div class="field"><label>Notes</label><textarea id="noteText" placeholder="Touch-off, offsets, safe moves, inspection notes..."></textarea></div>
+        <button class="primary" id="saveNoteBtn">Save Note</button>
+      </div>
+      <div class="card"><h2>Saved Notes</h2><div class="list" id="notesList"></div></div>
+    </section>
+
+    <section id="savedView" class="view grid hidden">
+      <div class="card"><h2>Saved Calculations</h2><div class="list" id="calcList"></div></div>
+      <div class="card"><h2>Data</h2><div class="row"><button id="exportBtn">Export JSON</button><button id="clearBtn" class="danger">Clear All</button></div><p class="hint">Everything saves locally on this device using localStorage. No account. No server.</p></div>
+    </section>
+  </main>
+</div>
+
+<nav class="footer-nav"><button class="nav active" data-view="manualView">Manual</button><button class="nav" data-view="diameterView">X Calc</button><button class="nav" data-view="notesView">Notes</button><button class="nav" data-view="savedView">Saved</button></nav>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const storeKey = 'cncLatheHelper.v2';
+  const fmt = n => Number.isFinite(n) ? Number(n).toFixed(3).replace(/^-0\.000$/, '0.000') : '--';
+  const num = v => { const cleaned = String(v || '').trim().replace(/^\./, '0.'); const n = Number(cleaned); return Number.isFinite(n) ? n : null; };
+  const state = JSON.parse(localStorage.getItem(storeKey) || '{"notes":[],"calcs":[]}');
+  const save = () => { localStorage.setItem(storeKey, JSON.stringify(state)); $('saveStatus').textContent='Saved local'; setTimeout(()=> $('saveStatus').textContent='Offline ready', 1200); };
+  const escapeHtml = s => String(s || '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+
+  function showView(id){ document.querySelectorAll('.view').forEach(v => v.classList.add('hidden')); $(id).classList.remove('hidden'); document.querySelectorAll('.nav').forEach(b => b.classList.toggle('active', b.dataset.view === id)); render(); }
+  document.querySelectorAll('.nav').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
+  function saveCalc(type, summary, details){ state.calcs.unshift({ id: crypto.randomUUID(), type, summary, details, date: new Date().toLocaleString() }); state.calcs = state.calcs.slice(0, 150); save(); render(); }
+
+  $('calcManualBtn').addEventListener('click', () => {
+    const touch = num($('touchDia').value), target = num($('targetDia').value), face = num($('faceZ').value) ?? 0, depth = num($('plungeDepth').value) ?? 0;
+    const iw = num($('insertWidth').value), ir = num($('insertRadius').value), dir = $('zDirection').value;
+    const tool = $('toolLabel').value.trim() || [iw!==null ? fmt(iw) : '', ir!==null ? 'x ' + fmt(ir) : ''].filter(Boolean).join(' ');
+    if(touch === null || target === null){ $('manualResult').innerHTML = '<div class="big">Enter X numbers</div><div class="hint">Need touch-off/current X diameter and target diameter.</div>'; return; }
+    const radialTravel = Math.abs(touch - target) / 2;
+    const diaChange = Math.abs(touch - target);
+    const zTarget = dir === 'minus' ? face - depth : face + depth;
+    const xMoveDirection = target < touch ? 'move X inward / smaller diameter' : target > touch ? 'move X outward / larger diameter' : 'no X diameter change';
+    const summary = `X${fmt(target)} / Z${fmt(zTarget)}`;
+    const details = `Touch-off X diameter: ${fmt(touch)}\nTarget circle/diameter: X${fmt(target)}\nDiameter change: ${fmt(diaChange)}\nRadial X travel: ${fmt(radialTravel)}\nX direction: ${xMoveDirection}\nFace Z: ${fmt(face)}\nPlunge depth: ${fmt(depth)}\nTarget Z: Z${fmt(zTarget)}\nInsert: ${tool || 'not entered'}`;
+    $('manualResult').innerHTML = `<div class="mini">Move to</div><div class="big">X${fmt(target)} &nbsp; Z${fmt(zTarget)}</div><div class="medium">Radial X travel: ${fmt(radialTravel)}</div><div class="hint">(${fmt(touch)} - ${fmt(target)}) ÷ 2 = ${fmt(radialTravel)} radial. ${escapeHtml(tool ? 'Tool: ' + tool : '')}</div>`;
+    saveCalc('Manual Lathe Move', summary, details);
+  });
+
+  $('loadLatheExampleBtn').addEventListener('click', () => { $('touchDia').value='24.000'; $('targetDia').value='3.000'; $('faceZ').value='0.000'; $('plungeDepth').value='.500'; $('zDirection').value='minus'; $('insertWidth').value='.187'; $('insertRadius').value='.015'; $('toolLabel').value='DB .187 x .015'; $('calcManualBtn').click(); });
+
+  $('calcDiameterBtn').addEventListener('click', () => { const d=num($('startDia').value), depth=num($('radialDepth').value), dir=$('cutDirection').value; if(d===null||depth===null){ $('diaResult').innerHTML='<div class="big">Enter numbers</div>'; return; } const x=dir==='od'?d-depth*2:d+depth*2; const label=`X${fmt(x)}`; $('diaResult').innerHTML=`<div class="mini">Target turret X</div><div class="big">${label}</div><div class="hint">${fmt(d)} ${dir==='od'?'-':'+'} (${fmt(depth)} × 2) = ${fmt(x)}</div>`; saveCalc('Diameter From Depth', label, `Start diameter: ${fmt(d)}\nRadial depth: ${fmt(depth)}\nDirection: ${dir.toUpperCase()}\nTarget: ${label}`); });
+
+  $('saveNoteBtn').addEventListener('click', () => { const note={ id:crypto.randomUUID(), date:new Date().toLocaleString(), job:$('jobName').value.trim(), operation:$('operation').value.trim(), tooling:$('tooling').value.trim(), text:$('noteText').value.trim() }; if(!note.job&&!note.operation&&!note.tooling&&!note.text) return; state.notes.unshift(note); save(); ['jobName','operation','tooling','noteText'].forEach(id => $(id).value=''); render(); });
+
+  function render(){ $('notesList').innerHTML = state.notes.length ? state.notes.map(n => `<div class="item"><strong>${escapeHtml(n.job || 'Untitled Note')}</strong><span class="mini">${escapeHtml(n.date)}</span><p>${escapeHtml([n.operation,n.tooling,n.text].filter(Boolean).join('\n'))}</p><button class="ghost" onclick="appDeleteNote('${n.id}')">Delete</button></div>`).join('') : '<p class="hint">No saved notes yet.</p>'; $('calcList').innerHTML = state.calcs.length ? state.calcs.map(c => `<div class="item"><strong>${escapeHtml(c.type)}: ${escapeHtml(c.summary)}</strong><span class="mini">${escapeHtml(c.date)}</span><p>${escapeHtml(c.details)}</p><button class="ghost" onclick="appDeleteCalc('${c.id}')">Delete</button></div>`).join('') : '<p class="hint">No saved calculations yet.</p>'; }
+  window.appDeleteNote = id => { const i=state.notes.findIndex(x=>x.id===id); if(i>=0){ state.notes.splice(i,1); save(); render(); } };
+  window.appDeleteCalc = id => { const i=state.calcs.findIndex(x=>x.id===id); if(i>=0){ state.calcs.splice(i,1); save(); render(); } };
+  $('exportBtn').addEventListener('click', () => { const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='cnc-lathe-helper-export.json'; a.click(); URL.revokeObjectURL(a.href); });
+  $('clearBtn').addEventListener('click', () => { if(confirm('Clear all saved notes and calculations?')){ state.notes=[]; state.calcs=[]; save(); render(); } });
+  if('serviceWorker' in navigator && location.protocol !== 'file:'){ window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(console.warn)); }
+  render();
+})();
+</script>
+</body>
+</html>
