@@ -1,7 +1,7 @@
 {
-  "name": "CNC Work Helper",
-  "short_name": "CNC Helper",
-  "description": "Offline CNC notes, diameter moves, plunge cuts, and groove position calculator.",
+  "name": "CNC Lathe Helper",
+  "short_name": "Lathe Helper",
+  "description": "Offline CNC lathe notes and manual X/Z movement calculator.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -9,17 +9,7 @@
   "theme_color": "#f57c00",
   "orientation": "portrait-primary",
   "icons": [
-    {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='192' height='192' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='42' fill='%23f57c00'/%3E%3Cpath d='M43 54h106v22H43zM43 88h68v22H43zM43 122h106v22H43z' fill='%23111111'/%3E%3Ccircle cx='142' cy='99' r='19' fill='%23111111'/%3E%3C/svg%3E",
-      "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='512' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%23f57c00'/%3E%3Cpath d='M114 144h284v58H114zM114 235h182v58H114zM114 326h284v58H114z' fill='%23111111'/%3E%3Ccircle cx='379' cy='264' r='51' fill='%23111111'/%3E%3C/svg%3E",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
+    {"src":"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='192' height='192' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='42' fill='%23f57c00'/%3E%3Cpath d='M38 58h116v18H38zM38 92h70v18H38zM38 126h116v18H38z' fill='%23111111'/%3E%3Ccircle cx='137' cy='101' r='23' fill='%23111111'/%3E%3C/svg%3E","sizes":"192x192","type":"image/svg+xml","purpose":"any maskable"},
+    {"src":"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='512' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%23f57c00'/%3E%3Cpath d='M100 154h312v48H100zM100 236h188v48H100zM100 318h312v48H100z' fill='%23111111'/%3E%3Ccircle cx='368' cy='260' r='62' fill='%23111111'/%3E%3C/svg%3E","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}
   ]
 }

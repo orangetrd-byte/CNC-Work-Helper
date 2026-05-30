@@ -1,53 +1,48 @@
-# CNC Work Helper PWA
+# CNC Lathe Helper PWA
 
-A phone-friendly offline PWA for CNC work notes and quick turret calculations.
+Offline phone-friendly PWA for CNC lathe work notes and Phase 1 manual movement calculations.
 
-## Features
+## Phase 1
 
-- Offline installable PWA
-- Local saved notes using `localStorage`
-- Saved calculation history
-- OD / ID diameter calculator
-- Plunge / groove Z edge calculator
-- Export saved data as JSON
-- GitHub Pages friendly
+Manual movement calculator:
 
-## Files
+- Touch-off / current X diameter
+- Target circle / final diameter
+- Z face value
+- Plunge depth from face
+- Z direction
+- Insert width and radius
+- Saved calculations
+- Saved work notes
+- Local-only storage
+- Offline service worker
 
-```text
-index.html
-manifest.json
-sw.js
-README.md
-```
+## Example
 
-## Basic machining logic
+Touch off at `X24.000`, target circle/diameter `3.000`, face at `Z0.000`, plunge depth `.500`, DB `.187 x .015` insert.
 
-Turning X is diameter based.
+Output:
 
 ```text
-OD target X = start diameter - radial depth × 2
-ID target X = start diameter + radial depth × 2
+Move to: X3.000 Z-.500
+Radial X travel: 10.500
 ```
 
-Example:
+Math:
 
 ```text
-Start OD = 24.000
-Radial depth = .186
-X = 24.000 - (.186 × 2)
-X = 23.628
+Radial X travel = (24.000 - 3.000) / 2 = 10.500
+Target Z = 0.000 - .500 = Z-.500
 ```
 
-## Deploy to GitHub Pages
+## Install on GitHub Pages
 
-1. Create a new GitHub repository.
-2. Upload these files to the root of the repo.
-3. Go to Settings → Pages.
-4. Set source to the main branch and root folder.
-5. Open the GitHub Pages URL on the phone.
-6. Use browser menu → Add to Home Screen / Install App.
+1. Upload `index.html`, `manifest.json`, and `sw.js` to the repository root.
+2. Enable GitHub Pages for the repository.
+3. Open the GitHub Pages URL on the phone.
+4. Use browser menu → Add to Home Screen / Install app.
 
 ## Notes
 
-This calculator is a helper, not a replacement for setup verification. Always verify turret orientation, tool side, offset direction, compensation, safe clearance, and control format before running a program.
+This app does not generate G-code yet. Phase 2 can add a code builder after the manual move math is trusted.
+Always verify machine setup, control mode, diameter/radius display, tool orientation, clearance, and offsets before moving or cutting.
