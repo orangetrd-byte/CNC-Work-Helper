@@ -1,5 +1,15 @@
-const CACHE_NAME = 'cnc-lathe-work-helper-v6';
-const ASSETS = ['./', './index.html', './styles.css', './app.js', './manifest.json'];
+const CACHE_NAME = 'cnc-lathe-work-helper-v7';
+const ASSETS = [
+  './',
+  './index.html',
+  './styles.css',
+  './app.js',
+  './manifest.json',
+  './icons/app-icon.svg',
+  './icons/app-icon-maskable.svg',
+  './icons/favicon.svg',
+  './icons/ui-symbols.svg'
+];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
 });
