@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cnc-lathe-work-helper-v11';
+const CACHE_NAME = 'cnc-lathe-work-helper-v12';
 const ASSETS = [
   './',
   './index.html',
@@ -6,6 +6,8 @@ const ASSETS = [
   './app.js',
   './job-loader.js',
   './manifest.json',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
   './icons/app-icon.svg',
   './icons/app-icon-maskable.svg',
   './icons/favicon.svg',
