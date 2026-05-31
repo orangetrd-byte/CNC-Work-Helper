@@ -7,7 +7,7 @@
   <meta name="description" content="Offline CNC lathe job notes, manual movement calculator, tool library, plotting preview, and draft G-code." />
   <link rel="manifest" href="./manifest.json" />
   <link rel="icon" href="./icons/favicon.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="./icons/app-icon.svg" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
   <link rel="stylesheet" href="./styles.css" />
   <title>CNC Lathe Work Helper</title>
 </head>
@@ -132,7 +132,8 @@
       <section id="toolsView" class="view grid hidden">
         <div class="card">
           <h2>Tool Library</h2>
-          <div class="field"><label for="premadeTool">Common tools</label><select id="premadeTool"></select></div>
+          <div class="field"><label for="premadeTool">Tool selector</label><select id="premadeTool"></select></div>
+          <div class="field"><label for="toolLibrarySelect">Saved/custom tool selector</label><select id="toolLibrarySelect"></select></div>
           <div class="row">
             <div class="field"><label for="toolLabel">Selected/custom label</label><input id="toolLabel" placeholder="DB .187 x .015"></div>
             <div class="field"><label for="insertWidth">Width</label><input id="insertWidth" inputmode="decimal" placeholder=".187"></div>
@@ -140,21 +141,20 @@
           </div>
           <div class="field"><label for="customToolNotes">Custom tool notes</label><input id="customToolNotes" placeholder="Groove insert, station, offset note"></div>
           <button id="saveToolBtn" class="primary full" type="button">Save Custom Tool</button>
+          <div class="result compact" id="toolDetail">Choose a tool to see width, radius, and notes.</div>
           <div class="hint">Labels like <code>DB .187 x .015</code> auto-fill width and nose radius.</div>
         </div>
         <div class="card">
           <h2>Speeds / Feeds</h2>
-          <div class="field"><label for="premadeFeed">Common speed/feed</label><select id="premadeFeed"></select></div>
+          <div class="field"><label for="premadeFeed">Speed/feed selector</label><select id="premadeFeed"></select></div>
+          <div class="field"><label for="feedLibrarySelect">Saved/custom speed-feed selector</label><select id="feedLibrarySelect"></select></div>
           <div class="row">
             <div class="field"><label for="gSpeed">Spindle / CSS</label><input id="gSpeed" placeholder="S250 M03"></div>
             <div class="field"><label for="gFeed">Feed rate</label><input id="gFeed" inputmode="decimal" placeholder=".004"></div>
             <div class="field"><label for="feedLabel">Feed label</label><input id="feedLabel" placeholder="Steel groove"></div>
           </div>
           <button id="saveFeedBtn" class="primary full" type="button">Save Custom Speed/Feed</button>
-        </div>
-        <div class="card span-2">
-          <h2>Saved Tools + Feeds</h2>
-          <div class="list" id="toolsList"></div>
+          <div class="result compact" id="feedDetail">Choose a speed/feed to see spindle and feed values.</div>
         </div>
       </section>
 
@@ -180,6 +180,47 @@
         </div>
       </section>
 
+      <section id="simView" class="view grid hidden">
+        <div class="card span-2">
+          <div class="section-head">
+            <h2>G-code Simulator / Visual Plot</h2>
+            <button id="runSimBtn" class="primary" type="button">Parse G-code</button>
+          </div>
+          <div class="plotWrap"><svg id="simPlot" class="plotSvg tall" viewBox="0 0 700 340" role="img" aria-label="Parsed X Z toolpath"></svg></div>
+          <div class="row">
+            <div class="result compact"><div class="mini">Current position</div><div class="big" id="simCurrent">X -- / Z --</div></div>
+            <div class="result warn compact"><div class="mini">Warnings</div><div id="simWarnings" class="warnList">Parse generated G-code to check for common problems.</div></div>
+          </div>
+          <div class="list" id="simSteps"></div>
+        </div>
+      </section>
+
+      <section id="tipsView" class="view grid hidden">
+        <div class="card"><h2>Lathe Setup Tips</h2><ul class="quick"><li>Confirm jaws, stickout, stock length, and work offset before touching off.</li><li>Keep a written note for the exact touch-off surface and tool offset used.</li><li>Check clearance at both X and Z before the first rapid move.</li></ul></div>
+        <div class="card"><h2>Touch-off Tips</h2><ul class="quick"><li>X is diameter based on most CNC lathes, so a .010 diameter change is .005 radial.</li><li>Z face is usually 0.000. Plunging into the face normally moves Z negative.</li><li>After touching off, make a short air move before cutting stock.</li></ul></div>
+        <div class="card"><h2>Safe Approach / Retract</h2><ul class="quick"><li>Rapid to a safe X and safe Z before feed moves.</li><li>Retract X clear before moving Z when shoulders, jaws, or grooves are close.</li><li>Single block the first run and keep feed override low until motion is proven.</li></ul></div>
+        <div class="card"><h2>Insert / Radius Notes</h2><ul class="quick"><li>Insert width controls groove width; nose radius affects corner blend and clearance.</li><li>Confirm programmed path against tool nose compensation and shop standard.</li><li>For form tools and groovers, check both sides of the insert before calling the move good.</li></ul></div>
+      </section>
+
+      <section id="symbolsView" class="view grid hidden">
+        <div class="card span-2"><h2>Symbols & Meanings</h2><div class="refGrid"><p><strong>X</strong><span>Diameter position on a lathe.</span></p><p><strong>Z</strong><span>Length/face position. Face is often Z0.000.</span></p><p><strong>S</strong><span>Spindle speed or CSS setting, depending on mode.</span></p><p><strong>F</strong><span>Feed rate. In G99 this is usually feed per revolution.</span></p><p><strong>G00</strong><span>Rapid move. Positioning only, not cutting feed.</span></p><p><strong>G01</strong><span>Linear feed move used for cutting.</span></p><p><strong>M03</strong><span>Spindle forward / clockwise by common convention.</span></p><p><strong>M04</strong><span>Spindle reverse / counterclockwise by common convention.</span></p><p><strong>M05</strong><span>Spindle stop.</span></p><p><strong>T0101</strong><span>Tool station 01 with offset 01 on many lathes.</span></p></div></div>
+      </section>
+
+      <section id="geometryView" class="view grid hidden">
+        <div class="card"><h2>Diameter / Radius</h2><div class="row"><div class="field"><label for="geoDiameter">Diameter</label><input id="geoDiameter" inputmode="decimal"></div><div class="field"><label for="geoRadius">Radius</label><input id="geoRadius" inputmode="decimal"></div></div><div class="result compact" id="geoDiaOut">Enter diameter or radius.</div></div>
+        <div class="card"><h2>OD Radial Travel</h2><div class="row"><div class="field"><label for="geoOdStart">Start diameter</label><input id="geoOdStart" inputmode="decimal"></div><div class="field"><label for="geoOdTarget">Target diameter</label><input id="geoOdTarget" inputmode="decimal"></div></div><div class="result compact" id="geoOdOut">Radial travel = diameter change / 2.</div></div>
+        <div class="card"><h2>Chamfer Calculator</h2><div class="row"><div class="field"><label for="geoChamferSize">Chamfer size</label><input id="geoChamferSize" inputmode="decimal"></div><div class="field"><label for="geoChamferAngle">Angle</label><input id="geoChamferAngle" inputmode="decimal" value="45"></div></div><div class="result compact" id="geoChamferOut">45 degree chamfer uses equal X-radius and Z legs.</div></div>
+        <div class="card"><h2>Taper Per Inch</h2><div class="row"><div class="field"><label for="geoTaperBig">Large diameter</label><input id="geoTaperBig" inputmode="decimal"></div><div class="field"><label for="geoTaperSmall">Small diameter</label><input id="geoTaperSmall" inputmode="decimal"></div><div class="field"><label for="geoTaperLength">Length</label><input id="geoTaperLength" inputmode="decimal"></div></div><div class="result compact" id="geoTaperOut">TPI = diameter difference / length.</div></div>
+        <div class="card span-2"><h2>Angle / Depth Helper</h2><div class="row"><div class="field"><label for="geoAngle">Angle</label><input id="geoAngle" inputmode="decimal"></div><div class="field"><label for="geoDepth">Depth</label><input id="geoDepth" inputmode="decimal"></div></div><div class="result compact" id="geoAngleOut">Enter angle and depth for a quick opposite/adjacent estimate.</div><p class="hint">Bolt circle calculator placeholder is reserved for a later update.</p></div>
+      </section>
+
+      <section id="handbookView" class="view grid hidden">
+        <div class="card"><h2>Common Formulas</h2><ul class="quick"><li>Radius = diameter / 2.</li><li>Diameter = radius x 2.</li><li>Lathe radial travel = diameter change / 2.</li><li>Taper per inch = diameter difference / length.</li></ul></div>
+        <div class="card"><h2>SFM / RPM</h2><ul class="quick"><li>RPM = (SFM x 3.82) / diameter.</li><li>SFM = (RPM x diameter) / 3.82.</li><li>Use actual stock diameter for starting RPM estimates.</li></ul></div>
+        <div class="card"><h2>Thread Basics</h2><ul class="quick"><li>Confirm pitch, hand, class, and major/minor diameter before cutting.</li><li>Check threading tool angle and center height.</li><li>Use the control and shop chart for final thread depth.</li></ul></div>
+        <div class="card"><h2>Drill / Tap References</h2><p class="hint">Placeholder for shop-approved drill and tap references. Keep this as a quick reference area, not copied handbook text.</p></div>
+      </section>
+
       <section id="savedView" class="view grid hidden">
         <div class="card">
           <h2>Saved Jobs</h2>
@@ -191,11 +232,9 @@
             <button id="exportJobBtn" type="button">Export Current Job JSON</button>
             <button id="exportAllBtn" type="button">Export All JSON</button>
           </div>
-          <div class="field file-field">
-            <label for="importFile">Import JSON job file</label>
-            <input id="importFile" type="file" accept="application/json,.json">
-          </div>
+          <div class="field file-field"><label for="importFile">Import JSON job file</label><input id="importFile" type="file" accept="application/json,.json"></div>
           <button id="clearBtn" class="danger full" type="button">Clear Local Data</button>
+          <button id="startNewAfterClearBtn" class="primary full hidden" type="button">Start New Job</button>
           <p class="hint">Jobs, notes, calculator values, tool/feed selections, plot data, and generated G-code are stored in localStorage on this device.</p>
         </div>
       </section>
@@ -208,6 +247,11 @@
     <button class="nav" data-view="manualView" type="button">Move</button>
     <button class="nav" data-view="toolsView" type="button">Tools</button>
     <button class="nav" data-view="gcodeView" type="button">G-code</button>
+    <button class="nav" data-view="simView" type="button">Simulator</button>
+    <button class="nav" data-view="tipsView" type="button">Tips</button>
+    <button class="nav" data-view="symbolsView" type="button">Symbols</button>
+    <button class="nav" data-view="geometryView" type="button">Geometry</button>
+    <button class="nav" data-view="handbookView" type="button">Reference</button>
     <button class="nav" data-view="savedView" type="button">Saved</button>
   </nav>
   <script src="./app.js" defer></script>
