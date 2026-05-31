@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="CNC Lathe Work Helper icon">
+  <rect width="512" height="512" rx="108" fill="#101010"/>
+  <circle cx="256" cy="256" r="170" fill="none" stroke="#f57c00" stroke-width="34"/>
+  <circle cx="256" cy="256" r="82" fill="none" stroke="#ffbd73" stroke-width="18"/>
+  <path d="M256 84v344M84 256h344" stroke="#f3f3f3" stroke-width="18" stroke-linecap="round"/>
+  <path d="M326 166l55 55-116 116-78 22 22-78 116-116z" fill="#f57c00" stroke="#101010" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M304 188l55 55" stroke="#ffbd73" stroke-width="12" stroke-linecap="round"/>
+</svg>
