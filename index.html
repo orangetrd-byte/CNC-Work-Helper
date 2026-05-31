@@ -6,10 +6,13 @@
   <meta name="theme-color" content="#f57c00" />
   <meta name="description" content="Offline CNC lathe job notes, manual movement calculator, tool library, plotting preview, and draft G-code." />
   <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" href="./icons/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="./icons/app-icon.svg" />
   <link rel="stylesheet" href="./styles.css" />
   <title>CNC Lathe Work Helper</title>
 </head>
 <body>
+  <noscript><p class="noscript">CNC Work Helper requires JavaScript. Please enable it in your browser settings.</p></noscript>
   <div class="app">
     <header>
       <div class="top">
@@ -28,7 +31,7 @@
     <aside class="drawer hidden" id="recentDrawer" aria-label="Recent jobs">
       <div class="drawer-head">
         <h2>Recent Jobs</h2>
-        <button class="ghost icon-btn" id="closeDrawer" type="button" aria-label="Close recent jobs">X</button>
+        <button class="ghost icon-btn" id="closeDrawer" type="button" aria-label="Close recent jobs">&times;</button>
       </div>
       <div class="list" id="recentJobsList"></div>
     </aside>
@@ -76,9 +79,12 @@
           <div class="row">
             <div class="field"><label for="faceZ">Z face</label><input id="faceZ" inputmode="decimal" placeholder="0.000"></div>
             <div class="field"><label for="plungeDepth">Plunge depth</label><input id="plungeDepth" inputmode="decimal" placeholder=".500"></div>
-            <div class="field"><label for="zDirection">Z direction</label><select id="zDirection"><option value="minus">Into part = Z minus</option><option value="plus">Into part = Z plus</option></select></div>
+            <div class="field"><label for="zDirection">Z direction</label><select id="zDirection"><option value="minus">Z minus (toward chuck)</option><option value="plus">Z plus (away from chuck)</option></select></div>
           </div>
-          <button class="primary full" id="loadLatheExampleBtn" type="button">Load X24 to X3 Example</button>
+          <div class="row actions">
+            <button class="primary" id="loadLatheExampleBtn" type="button">Load X24 to X3 Example</button>
+            <button id="clearCalcBtn" type="button">Clear Calculator</button>
+          </div>
           <div class="result" id="manualResult">
             <div class="mini">Target moves</div>
             <div class="big">X -- / Z --</div>
@@ -196,7 +202,7 @@
     </main>
   </div>
 
-  <nav class="footer-nav" aria-label="Primary">
+  <nav class="footer-nav" aria-label="Main navigation">
     <button class="nav active" data-view="notesView" type="button">Notes</button>
     <button class="nav" data-view="setupView" type="button">Setup</button>
     <button class="nav" data-view="manualView" type="button">Move</button>
@@ -204,7 +210,7 @@
     <button class="nav" data-view="gcodeView" type="button">G-code</button>
     <button class="nav" data-view="savedView" type="button">Saved</button>
   </nav>
-  <script src="./app.js"></script>
-  <script src="./job-loader.js"></script>
+  <script src="./app.js" defer></script>
+  <script src="./job-loader.js" defer></script>
 </body>
 </html>
