@@ -28,7 +28,10 @@
   }
 
   function openJobPicker(event) {
-    if (event) event.preventDefault();
+    if (event) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
     const list = $('recentJobsList');
     const drawer = $('recentDrawer');
     const scrim = $('drawerScrim');
