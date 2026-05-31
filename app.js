@@ -18,6 +18,7 @@
   ];
   const blankJob = () => ({
     id: crypto.randomUUID(), partNumber: '', material: '', operation: '', machine: '', toolNotes: '', setupNotes: '',
+    setup: { workOffset: '', stockDiameter: '', stockLength: '', chuckJaw: '', stickout: '', coolant: '', inspectionNotes: '', setupReference: '' },
     calculator: { mode: 'od', touchDia: '', targetDia: '', faceZ: '0.000', plungeDepth: '', zDirection: 'minus' },
     tool: { label: '', width: '', radius: '', notes: '' }, feed: { label: '', speed: '', feed: '' },
     gcode: { toolCall: '', rapidX: '', rapidZ: '', comment: '', output: '' }, lastMove: null,
@@ -56,7 +57,7 @@
   }
   function normalizeState(input) {
     const state = { ...baseState(), ...input };
-    state.jobs = Array.isArray(state.jobs) ? state.jobs.map(job => ({ ...blankJob(), ...job, calculator: { ...blankJob().calculator, ...(job.calculator || {}) }, tool: { ...blankJob().tool, ...(job.tool || {}) }, feed: { ...blankJob().feed, ...(job.feed || {}) }, gcode: { ...blankJob().gcode, ...(job.gcode || {}) } })) : [];
+    state.jobs = Array.isArray(state.jobs) ? state.jobs.map(job => ({ ...blankJob(), ...job, setup: { ...blankJob().setup, ...(job.setup || {}) }, calculator: { ...blankJob().calculator, ...(job.calculator || {}) }, tool: { ...blankJob().tool, ...(job.tool || {}) }, feed: { ...blankJob().feed, ...(job.feed || {}) }, gcode: { ...blankJob().gcode, ...(job.gcode || {}) } })) : [];
     state.tools = Array.isArray(state.tools) ? state.tools : [];
     state.feeds = Array.isArray(state.feeds) ? state.feeds : [];
     if (!state.jobs.length) state.jobs.push(blankJob());
@@ -101,6 +102,7 @@
   function isBlankJob(job) {
     return ![
       job.partNumber, job.material, job.operation, job.machine, job.toolNotes, job.setupNotes,
+      job.setup?.workOffset, job.setup?.stockDiameter, job.setup?.stockLength, job.setup?.chuckJaw, job.setup?.stickout, job.setup?.coolant, job.setup?.inspectionNotes, job.setup?.setupReference,
       job.calculator?.touchDia, job.calculator?.targetDia, job.calculator?.plungeDepth,
       job.tool?.label, job.feed?.label, job.gcode?.output
     ].some(value => String(value || '').trim());
@@ -136,6 +138,7 @@
     job.machine = $('machine').value.trim();
     job.toolNotes = $('toolNotes').value.trim();
     job.setupNotes = $('setupNotes').value.trim();
+    job.setup = { workOffset: $('workOffset').value.trim(), stockDiameter: $('stockDiameter').value.trim(), stockLength: $('stockLength').value.trim(), chuckJaw: $('chuckJaw').value.trim(), stickout: $('stickout').value.trim(), coolant: $('coolant').value.trim(), inspectionNotes: $('inspectionNotes').value.trim(), setupReference: $('setupReference').value.trim() };
     job.calculator = { mode: document.querySelector('.seg.active')?.dataset.mode || 'od', touchDia: $('touchDia').value.trim(), targetDia: $('targetDia').value.trim(), faceZ: $('faceZ').value.trim(), plungeDepth: $('plungeDepth').value.trim(), zDirection: $('zDirection').value };
     job.tool = { label: $('toolLabel').value.trim(), width: $('insertWidth').value.trim(), radius: $('insertRadius').value.trim(), notes: $('customToolNotes').value.trim() };
     job.feed = { label: $('feedLabel').value.trim(), speed: $('gSpeed').value.trim(), feed: $('gFeed').value.trim() };
@@ -144,6 +147,7 @@
   function fillFields(job) {
     $('partNumber').value = job.partNumber || ''; $('material').value = job.material || ''; $('operation').value = job.operation || ''; $('machine').value = job.machine || '';
     $('toolNotes').value = job.toolNotes || ''; $('setupNotes').value = job.setupNotes || ''; $('touchDia').value = job.calculator.touchDia || ''; $('targetDia').value = job.calculator.targetDia || '';
+    $('workOffset').value = job.setup.workOffset || ''; $('stockDiameter').value = job.setup.stockDiameter || ''; $('stockLength').value = job.setup.stockLength || ''; $('chuckJaw').value = job.setup.chuckJaw || ''; $('stickout').value = job.setup.stickout || ''; $('coolant').value = job.setup.coolant || ''; $('inspectionNotes').value = job.setup.inspectionNotes || ''; $('setupReference').value = job.setup.setupReference || '';
     $('faceZ').value = job.calculator.faceZ || ''; $('plungeDepth').value = job.calculator.plungeDepth || ''; $('zDirection').value = job.calculator.zDirection || 'minus'; setMode(job.calculator.mode || 'od', false);
     $('toolLabel').value = job.tool.label || ''; $('insertWidth').value = job.tool.width || ''; $('insertRadius').value = job.tool.radius || ''; $('customToolNotes').value = job.tool.notes || '';
     $('feedLabel').value = job.feed.label || ''; $('gSpeed').value = job.feed.speed || ''; $('gFeed').value = job.feed.feed || ''; $('gTool').value = job.gcode.toolCall || '';
@@ -207,7 +211,27 @@
     const toolCall = $('gTool').value.trim();
     const speed = $('gSpeed').value.trim();
     const comment = $('gComment').value.trim() || job.operation || 'MANUAL LATHE MOVE';
-    const output = [`(${comment})`, '(DRAFT/CHECK BEFORE RUNNING)', '(ASSUMES X DIAMETER MODE)', toolCall, speed, `G00 X${fmt(safeX)} Z${fmt(safeZ)}`, `G01 Z${fmt(move.zTarget)} F${feed}`, `G01 X${fmt(move.target)} F${feed}`, `G00 X${fmt(safeX)} Z${fmt(safeZ)}`, `(TARGET X${fmt(move.target)} Z${fmt(move.zTarget)})`, `(RADIAL TRAVEL ${fmt(move.radialTravel)})`, move.tool ? `(TOOL ${move.tool})` : ''].filter(Boolean).join('\n');
+    const workOffset = job.setup?.workOffset?.trim();
+    const output = [
+      '%',
+      `(${comment})`,
+      '(DRAFT/CHECK BEFORE RUNNING)',
+      '(VERIFY POST, OFFSETS, CLEARANCE, SPINDLE, FEED, AND X DIAMETER MODE)',
+      'G18 G40 G80 G99',
+      workOffset || '',
+      toolCall,
+      speed,
+      `G00 X${fmt(safeX)} Z${fmt(safeZ)}`,
+      `G01 Z${fmt(move.zTarget)} F${feed}`,
+      `G01 X${fmt(move.target)} F${feed}`,
+      `G00 X${fmt(safeX)}`,
+      `G00 Z${fmt(safeZ)}`,
+      '(OPTIONAL STOP / END TO SHOP STANDARD)',
+      `(TARGET X${fmt(move.target)} Z${fmt(move.zTarget)})`,
+      `(RADIAL TRAVEL ${fmt(move.radialTravel)})`,
+      move.tool ? `(TOOL ${move.tool})` : '',
+      '%'
+    ].filter(Boolean).join('\n');
     $('gcodeOut').textContent = output;
     drawPlot({ safeX, safeZ, targetX: move.target, targetZ: move.zTarget, faceZ: move.face, touchX: move.touch });
     if (saveToJob) job.gcode.output = output;
@@ -232,23 +256,40 @@
     return match ? { width: normalizeDecimal(match[1]), radius: normalizeDecimal(match[2]) } : null;
   }
   function renderSelects() {
-    $('premadeTool').innerHTML = '<option value="">Choose common tool...</option>' + premadeTools.map((tool, index) => `<option value="${index}">${escapeHtml(tool.label)}</option>`).join('');
+    const toolOptions = '<option value="">Choose tool...</option>' + allTools().map(tool => `<option value="${tool.id}">${escapeHtml(tool.label)}</option>`).join('');
+    $('premadeTool').innerHTML = toolOptions;
+    $('activeToolSelect').innerHTML = toolOptions;
+    $('gcodeToolSelect').innerHTML = toolOptions;
     $('premadeFeed').innerHTML = '<option value="">Choose common speed/feed...</option>' + premadeFeeds.map((feed, index) => `<option value="${index}">${escapeHtml(feed.label)}</option>`).join('');
+  }
+  function allTools() {
+    return [...premadeTools.map((tool, index) => ({ ...tool, id: `p${index}` })), ...state.tools];
+  }
+  function currentToolId() {
+    const label = $('toolLabel').value.trim();
+    return allTools().find(tool => tool.label === label)?.id || '';
+  }
+  function syncToolSelects() {
+    const id = currentToolId();
+    $('premadeTool').value = id;
+    $('activeToolSelect').value = id;
+    $('gcodeToolSelect').value = id;
   }
   const jobTitle = job => job.partNumber || job.operation || job.machine || 'Untitled job';
   function renderJobs() {
     const sorted = [...state.jobs].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
     $('jobsList').innerHTML = sorted.map(job => `<div class="item"><strong>${escapeHtml(jobTitle(job))}</strong><span class="mini">${escapeHtml(new Date(job.updatedAt).toLocaleString())}</span><p>${escapeHtml([job.material,job.operation,job.machine].filter(Boolean).join('\n'))}</p><div class="row actions"><button type="button" onclick="loadJob('${job.id}')">Load</button><button class="ghost" type="button" onclick="duplicateJob('${job.id}')">Duplicate</button></div></div>`).join('') || '<p class="hint">No saved jobs yet.</p>';
+    $('setupJobsList').innerHTML = sorted.map(job => `<div class="item"><strong>${escapeHtml(jobTitle(job))}</strong><span class="mini">${escapeHtml(new Date(job.updatedAt).toLocaleString())}</span><p>${escapeHtml([job.setup?.workOffset ? `Offset: ${job.setup.workOffset}` : '', job.setup?.stockDiameter ? `Stock: ${job.setup.stockDiameter}` : '', job.setup?.chuckJaw, job.setup?.setupReference].filter(Boolean).join('\n'))}</p><div class="row actions"><button type="button" onclick="loadJob('${job.id}')">Load Reference</button><button class="ghost" type="button" onclick="duplicateJob('${job.id}')">Duplicate</button></div></div>`).join('') || '<p class="hint">No saved job references yet.</p>';
     $('recentJobsList').innerHTML = state.recentJobIds.map(id => state.jobs.find(job => job.id === id)).filter(Boolean).map(job => `<div class="item"><strong>${escapeHtml(jobTitle(job))}</strong><span class="mini">${escapeHtml(new Date(job.updatedAt).toLocaleString())}</span><button type="button" onclick="loadJob('${job.id}')">Load Job</button></div>`).join('') || '<p class="hint">No recent jobs yet.</p>';
   }
   function renderTools() {
-    const tools = [...premadeTools.map((tool, index) => ({ ...tool, id: `p${index}` })), ...state.tools];
+    const tools = allTools();
     const feeds = [...premadeFeeds.map((feed, index) => ({ ...feed, id: `f${index}` })), ...state.feeds];
     const toolHtml = tools.map(tool => `<div class="item"><strong>${escapeHtml(tool.label)}</strong><p>${escapeHtml([tool.width ? `Width: ${tool.width}` : '', tool.radius ? `Radius: ${tool.radius}` : '', tool.notes].filter(Boolean).join('\n'))}</p><button type="button" onclick="useTool('${tool.id}')">Use Tool</button></div>`).join('');
     const feedHtml = feeds.map(feed => `<div class="item"><strong>${escapeHtml(feed.label)}</strong><p>${escapeHtml([feed.speed, feed.feed ? `Feed: ${feed.feed}` : ''].filter(Boolean).join('\n'))}</p><button type="button" onclick="useFeed('${feed.id}')">Use Feed</button></div>`).join('');
     $('toolsList').innerHTML = toolHtml + feedHtml;
   }
-  function render() { renderJobs(); renderTools(); updateJobLabel(); }
+  function render() { renderSelects(); renderJobs(); renderTools(); updateJobLabel(); syncToolSelects(); }
   function showView(id) {
     currentView = id;
     document.querySelectorAll('.view').forEach(view => view.classList.add('hidden'));
@@ -305,14 +346,19 @@
   $('closeDrawer').addEventListener('click', closeDrawer); $('drawerScrim').addEventListener('click', closeDrawer);
   $('newJobBtn').addEventListener('click', () => { updateFromFields(); const job = blankJob(); state.jobs.unshift(job); state.currentJobId = job.id; state.recentJobIds = uniqueIds([job.id, ...state.recentJobIds], state.jobs); fillFields(job); persist('New job'); render(); });
   $('saveJobBtn').addEventListener('click', () => autosave());
+  $('saveSetupBtn').addEventListener('click', () => autosave());
   $('duplicateJobBtn').addEventListener('click', () => window.duplicateJob(state.currentJobId));
   $('loadJobBtn').addEventListener('click', () => { $('recentDrawer').classList.remove('hidden'); $('drawerScrim').classList.remove('hidden'); });
+  $('setupNewJobBtn').addEventListener('click', () => $('newJobBtn').click());
+  $('setupLoadJobBtn').addEventListener('click', () => $('loadJobBtn').click());
   $('loadLatheExampleBtn').addEventListener('click', () => { $('touchDia').value = '24.000'; $('targetDia').value = '3.000'; $('faceZ').value = '0.000'; $('plungeDepth').value = '.500'; $('zDirection').value = 'minus'; $('toolLabel').value = 'DB .187 x .015'; $('insertWidth').value = '.187'; $('insertRadius').value = '.015'; calculateMove(true); });
-  ['partNumber','material','operation','machine','toolNotes','setupNotes','touchDia','targetDia','faceZ','plungeDepth','zDirection','insertWidth','insertRadius','customToolNotes','gTool','gRapidX','gRapidZ','gComment','gSpeed','gFeed','feedLabel'].forEach(id => {
+  ['partNumber','material','operation','machine','toolNotes','setupNotes','workOffset','stockDiameter','stockLength','chuckJaw','stickout','coolant','inspectionNotes','setupReference','touchDia','targetDia','faceZ','plungeDepth','zDirection','insertWidth','insertRadius','customToolNotes','gTool','gRapidX','gRapidZ','gComment','gSpeed','gFeed','feedLabel'].forEach(id => {
     $(id).addEventListener('input', () => { if (['touchDia','targetDia','faceZ','plungeDepth','zDirection'].includes(id)) calculateMove(false); autosave(); });
   });
   $('toolLabel').addEventListener('input', () => { const parsed = parseToolLabel($('toolLabel').value); if (parsed) { $('insertWidth').value = parsed.width; $('insertRadius').value = parsed.radius; } autosave(); });
-  $('premadeTool').addEventListener('change', event => { if (event.target.value !== '') window.useTool(`p${event.target.value}`); });
+  ['premadeTool','activeToolSelect','gcodeToolSelect'].forEach(id => {
+    $(id).addEventListener('change', event => { if (event.target.value !== '') window.useTool(event.target.value); });
+  });
   $('premadeFeed').addEventListener('change', event => { if (event.target.value !== '') window.useFeed(`f${event.target.value}`); });
   $('saveToolBtn').addEventListener('click', () => { const tool = { id: crypto.randomUUID(), date: new Date().toLocaleString(), label: $('toolLabel').value.trim(), width: $('insertWidth').value.trim(), radius: $('insertRadius').value.trim(), notes: $('customToolNotes').value.trim() }; if (!tool.label && !tool.width && !tool.radius && !tool.notes) return; state.tools.unshift(tool); autosave(); });
   $('saveFeedBtn').addEventListener('click', () => { state.feeds.unshift({ id: crypto.randomUUID(), date: new Date().toLocaleString(), label: $('feedLabel').value.trim() || 'Custom speed/feed', speed: $('gSpeed').value.trim(), feed: $('gFeed').value.trim() }); autosave(); });
