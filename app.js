@@ -60,7 +60,9 @@
     state.tools = Array.isArray(state.tools) ? state.tools : [];
     state.feeds = Array.isArray(state.feeds) ? state.feeds : [];
     if (!state.jobs.length) state.jobs.push(blankJob());
-    if (!state.currentJobId || !state.jobs.some(job => job.id === state.currentJobId)) state.currentJobId = state.jobs[0].id;
+    if (!state.currentJobId || !state.jobs.some(job => job.id === state.currentJobId)) state.currentJobId = pickResumeJob(state.jobs).id;
+    const current = state.jobs.find(job => job.id === state.currentJobId);
+    if (current && isBlankJob(current) && state.jobs.some(job => !isBlankJob(job))) state.currentJobId = pickResumeJob(state.jobs).id;
     state.recentJobIds = uniqueIds([state.currentJobId, ...(state.recentJobIds || [])], state.jobs);
     return state;
   }
@@ -95,6 +97,20 @@
   function uniqueIds(ids, jobs) {
     const valid = new Set(jobs.map(job => job.id));
     return [...new Set(ids.filter(id => valid.has(id)))].slice(0, 20);
+  }
+  function isBlankJob(job) {
+    return ![
+      job.partNumber, job.material, job.operation, job.machine, job.toolNotes, job.setupNotes,
+      job.calculator?.touchDia, job.calculator?.targetDia, job.calculator?.plungeDepth,
+      job.tool?.label, job.feed?.label, job.gcode?.output
+    ].some(value => String(value || '').trim());
+  }
+  function pickResumeJob(jobs) {
+    return [...jobs].sort((a, b) => {
+      const blankDelta = Number(isBlankJob(a)) - Number(isBlankJob(b));
+      if (blankDelta) return blankDelta;
+      return new Date(b.updatedAt) - new Date(a.updatedAt);
+    })[0] || jobs[0];
   }
 
   let state = readState();
@@ -133,7 +149,20 @@
     $('feedLabel').value = job.feed.label || ''; $('gSpeed').value = job.feed.speed || ''; $('gFeed').value = job.feed.feed || ''; $('gTool').value = job.gcode.toolCall || '';
     $('gRapidX').value = job.gcode.rapidX || ''; $('gRapidZ').value = job.gcode.rapidZ || ''; $('gComment').value = job.gcode.comment || '';
     $('gcodeOut').textContent = job.gcode.output || 'Enter calculator values to generate draft G-code.';
-    updateJobLabel(); calculateMove(false);
+    updateJobLabel();
+    renderMoveFromJob(job);
+  }
+  function renderMoveFromJob(job) {
+    const move = job.lastMove;
+    if (!move) {
+      $('manualResult').innerHTML = '<div class="big">X -- / Z --</div><div class="hint">Enter touch-off X diameter and target diameter.</div>';
+      drawPlot(null);
+      return;
+    }
+    $('manualResult').innerHTML = `<div class="mini">Move to</div><div class="big">X${fmt(move.target)} &nbsp; Z${fmt(move.zTarget)}</div><div class="medium">Radial travel: ${fmt(move.radialTravel)}</div><div class="hint">Diameter change: ${fmt(move.diaChange)}.${move.tool ? ` Tool: ${escapeHtml(move.tool)}` : ''}</div>`;
+    const safeX = num($('gRapidX').value) ?? Math.max(move.touch, move.target) + 0.100;
+    const safeZ = num($('gRapidZ').value) ?? (move.zTarget < move.face ? move.face + 0.100 : move.face - 0.100);
+    drawPlot({ safeX, safeZ, targetX: move.target, targetZ: move.zTarget, faceZ: move.face, touchX: move.touch });
   }
   function updateJobLabel() {
     const job = currentJob();
@@ -293,6 +322,6 @@
   $('exportAllBtn').addEventListener('click', () => { updateFromFields(); downloadJson('cnc-work-helper-all.json', { app: 'CNC Lathe Work Helper', version: 4, ...state }); });
   $('importFile').addEventListener('change', async event => { const file = event.target.files[0]; if (!file) return; try { importJobData(JSON.parse(await file.text())); event.target.value = ''; } catch (error) { alert('Import failed. Check that this is a valid CNC Work Helper JSON export.'); } });
   $('clearBtn').addEventListener('click', () => { if (!confirm('Clear saved jobs, tools, feeds, and current auto-save?')) return; state = baseState(); const job = blankJob(); state.jobs.push(job); state.currentJobId = job.id; state.recentJobIds = [job.id]; fillFields(job); persist('Cleared'); render(); });
-  renderSelects(); fillFields(currentJob()); persist('Auto-resumed'); showView(currentView);
+  renderSelects(); fillFields(currentJob()); touchStatus('Auto-resumed'); showView(currentView);
   if ('serviceWorker' in navigator && location.protocol !== 'file:') window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(console.warn));
 })();
