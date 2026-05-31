@@ -1,6 +1,6 @@
 # CNC Lathe Work Helper PWA
 
-Offline phone-friendly PWA for CNC lathe job notes, manual movement calculations, tool/feed libraries, rough plotting, saved jobs, import/export, and draft G-code output.
+Offline phone-friendly PWA for CNC lathe job notes, setup references, manual movement calculations, tool/feed libraries, rough plotting, saved jobs, import/export, and draft G-code output.
 
 ## Features
 
@@ -12,6 +12,7 @@ Offline phone-friendly PWA for CNC lathe job notes, manual movement calculations
 - Manual X/Z lathe movement calculator using diameter-based X
 - Example: touch off at `X24.000`, target `X3.000`, face `Z0.000`, plunge `.500`
 - Output: `X3.000 Z-.500` and radial travel `10.500`
+- Clear Calculator button for resetting move values quickly
 - Premade and custom tool library
 - Active tool dropdown on the calculator and G-code screens
 - Tool label parsing such as `DB .187 x .015`
@@ -20,6 +21,7 @@ Offline phone-friendly PWA for CNC lathe job notes, manual movement calculations
 - Rough SVG plot for stock/target/plunge path preview
 - Export current job JSON, export all data JSON, and import JSON job files
 - Manifest and service worker for offline PWA use
+- PWA icon metadata includes a 192x192 PNG manifest icon and SVG app icons
 
 ## Safety Note
 
@@ -27,7 +29,7 @@ The plot and generated G-code are draft aids only. Always verify machine mode, X
 
 ## GitHub Pages Install
 
-1. Upload `index.html`, `styles.css`, `app.js`, `manifest.json`, `sw.js`, and `README.md` to a GitHub repository.
+1. Upload `index.html`, `styles.css`, `app.js`, `job-loader.js`, `manifest.json`, `sw.js`, `README.md`, and the `icons/` folder to a GitHub repository.
 2. Enable GitHub Pages from the repository settings.
 3. Open the Pages URL on the phone.
 4. Use the browser menu to add to home screen or install the app.
@@ -41,6 +43,8 @@ Open `index.html` directly for basic testing, or serve the folder with a local s
 - `index.html` - app shell
 - `styles.css` - mobile-first UI
 - `app.js` - job storage, calculator, G-code, plot, import/export
+- `job-loader.js` - saved-job picker and calculator utility behavior
 - `manifest.json` - PWA install metadata
 - `sw.js` - offline cache service worker
+- `icons/` - app, favicon, and UI icon assets
 - `README.md` - project notes
