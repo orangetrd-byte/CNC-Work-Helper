@@ -15,7 +15,7 @@
       <div class="top">
         <div>
           <h1>CNC Lathe Work Helper</h1>
-          <p class="sub">Job notes, X diameter moves, tool/feed data, rough plot, and draft G-code.</p>
+          <p class="sub">Job setup references, X diameter moves, tool/feed data, rough plot, and draft G-code.</p>
         </div>
         <button class="badge" id="recentToggle" type="button">Recent Jobs</button>
       </div>
@@ -64,6 +64,7 @@
       <section id="manualView" class="view grid hidden">
         <div class="card">
           <h2>Manual Lathe Move Calculator</h2>
+          <div class="field"><label for="activeToolSelect">Tool choice</label><select id="activeToolSelect"></select></div>
           <div class="mode-row" role="group" aria-label="Lathe mode">
             <button class="seg active" data-mode="od" type="button">OD</button>
             <button class="seg" data-mode="id" type="button">ID</button>
@@ -88,6 +89,37 @@
           <h2>Rough Plot</h2>
           <div class="plotWrap"><svg id="gcodePlot" class="plotSvg" viewBox="0 0 640 280" role="img" aria-label="Rough X Z move plot"></svg></div>
           <p class="hint">Rough preview only, not simulation. Solid line is feed. Dashed line is rapid/retract.</p>
+        </div>
+      </section>
+
+      <section id="setupView" class="view grid hidden">
+        <div class="card span-2">
+          <div class="section-head">
+            <h2>Setup Reference</h2>
+            <div class="row actions">
+              <button id="saveSetupBtn" class="primary" type="button">Save Setup</button>
+              <button id="setupNewJobBtn" type="button">New Job</button>
+              <button id="setupLoadJobBtn" type="button">Load Job</button>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field"><label for="workOffset">Work offset</label><input id="workOffset" placeholder="G54, G55, offset note"></div>
+            <div class="field"><label for="stockDiameter">Stock diameter</label><input id="stockDiameter" inputmode="decimal" placeholder="24.000"></div>
+            <div class="field"><label for="stockLength">Stock length</label><input id="stockLength" inputmode="decimal" placeholder="2.500"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label for="chuckJaw">Chuck / jaws</label><input id="chuckJaw" placeholder="3-jaw, soft jaws, step, pressure"></div>
+            <div class="field"><label for="stickout">Stickout</label><input id="stickout" placeholder="Length from jaws"></div>
+            <div class="field"><label for="coolant">Coolant</label><input id="coolant" placeholder="Flood, oil, dry, air"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label for="inspectionNotes">Inspection notes</label><textarea id="inspectionNotes" placeholder="Critical sizes, gauges, first-piece checks"></textarea></div>
+            <div class="field"><label for="setupReference">Reference notes</label><textarea id="setupReference" placeholder="Photos, print rev, offsets, safe approach, lessons learned"></textarea></div>
+          </div>
+        </div>
+        <div class="card span-2">
+          <h2>Saved Job References</h2>
+          <div class="list" id="setupJobsList"></div>
         </div>
       </section>
 
@@ -123,6 +155,7 @@
       <section id="gcodeView" class="view grid hidden">
         <div class="card span-2">
           <h2>Draft G-code</h2>
+          <div class="field"><label for="gcodeToolSelect">Tool choice</label><select id="gcodeToolSelect"></select></div>
           <div class="row">
             <div class="field"><label for="gTool">Tool call</label><input id="gTool" placeholder="T0505"></div>
             <div class="field"><label for="gRapidX">Rapid / approach X</label><input id="gRapidX" inputmode="decimal" placeholder="24.100"></div>
@@ -165,6 +198,7 @@
 
   <nav class="footer-nav" aria-label="Primary">
     <button class="nav active" data-view="notesView" type="button">Notes</button>
+    <button class="nav" data-view="setupView" type="button">Setup</button>
     <button class="nav" data-view="manualView" type="button">Move</button>
     <button class="nav" data-view="toolsView" type="button">Tools</button>
     <button class="nav" data-view="gcodeView" type="button">G-code</button>
