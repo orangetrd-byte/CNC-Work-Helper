@@ -3,13 +3,21 @@
   const $ = id => document.getElementById(id);
   const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[ch]));
 
-  function readJobs() {
+  function readState() {
     try {
-      const state = JSON.parse(localStorage.getItem(storeKey) || '{}');
-      return Array.isArray(state.jobs) ? state.jobs : [];
+      return JSON.parse(localStorage.getItem(storeKey) || '{}');
     } catch (error) {
-      return [];
+      return {};
     }
+  }
+
+  function writeState(state) {
+    localStorage.setItem(storeKey, JSON.stringify(state));
+  }
+
+  function readJobs() {
+    const state = readState();
+    return Array.isArray(state.jobs) ? state.jobs : [];
   }
 
   function title(job) {
@@ -46,8 +54,30 @@
     scrim.classList.remove('hidden');
   }
 
+  function clearCalculator() {
+    ['touchDia', 'targetDia', 'plungeDepth', 'gRapidX', 'gRapidZ'].forEach(id => { if ($(id)) $(id).value = ''; });
+    if ($('faceZ')) $('faceZ').value = '0.000';
+    if ($('zDirection')) $('zDirection').value = 'minus';
+    if ($('manualResult')) $('manualResult').innerHTML = '<div class="big">X -- / Z --</div><div class="hint">Enter touch-off X diameter and target diameter.</div>';
+    if ($('gcodeOut')) $('gcodeOut').textContent = 'Enter calculator values to generate draft G-code.';
+    if ($('gcodePlot')) $('gcodePlot').innerHTML = '<text x="24" y="42" class="plotLabel">No move calculated yet.</text>';
+
+    const state = readState();
+    const job = Array.isArray(state.jobs) ? state.jobs.find(item => item.id === state.currentJobId) : null;
+    if (job) {
+      job.lastMove = null;
+      job.calculator = { ...(job.calculator || {}), touchDia: '', targetDia: '', faceZ: '0.000', plungeDepth: '', zDirection: 'minus' };
+      job.gcode = { ...(job.gcode || {}), rapidX: '', rapidZ: '', output: 'Enter calculator values to generate draft G-code.' };
+      job.updatedAt = new Date().toISOString();
+      writeState(state);
+    }
+  }
+
   ['loadJobBtn', 'setupLoadJobBtn', 'recentToggle'].forEach(id => {
     const button = $(id);
     if (button) button.addEventListener('click', openJobPicker, true);
   });
+
+  const clearButton = $('clearCalcBtn');
+  if (clearButton) clearButton.addEventListener('click', clearCalculator);
 })();
