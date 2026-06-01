@@ -25,6 +25,23 @@
     { id: 'f3', label: 'Cast iron dry', speed: 'S320 M03', feed: '.005' },
     { id: 'f4', label: 'Finish pass', speed: 'S450 M03', feed: '.003' }
   ];
+  const gdSymbols = [
+    ['Straightness', 'Controls how straight a line element or axis must be.'],
+    ['Flatness', 'Controls how flat a surface must be without needing a datum.'],
+    ['Circularity', 'Controls roundness of each circular cross-section.'],
+    ['Cylindricity', 'Controls roundness, straightness, and taper of a cylinder.'],
+    ['Profile of a line', 'Controls a 2D cross-section profile.'],
+    ['Profile of a surface', 'Controls a full 3D surface profile.'],
+    ['Parallelism', 'Keeps a feature parallel to a datum.'],
+    ['Perpendicularity', 'Keeps a feature square to a datum.'],
+    ['Angularity', 'Controls a feature at a specified angle to a datum.'],
+    ['Position', 'Locates holes, bores, slots, or features from datums.'],
+    ['Concentricity', 'Legacy control for shared center axis; verify print requirement.'],
+    ['Symmetry', 'Legacy control for balanced median points; verify inspection method.'],
+    ['Circular runout', 'Checks wobble per circular section while rotating.'],
+    ['Total runout', 'Checks full surface wobble while rotating.'],
+    ['Datum A/B/C', 'Reference surfaces or axes used to locate and inspect features.']
+  ];
 
   function readState() {
     try { return JSON.parse(localStorage.getItem(storeKey) || '{}'); } catch { return {}; }
@@ -41,6 +58,7 @@
   }
   function showClearedState() {
     if (sessionStorage.getItem(clearFlag) !== '1') return;
+    clearCncStorage();
     const start = $('startNewAfterClearBtn');
     if (start) start.classList.remove('hidden');
     if ($('saveStatus')) $('saveStatus').textContent = 'Cleared. Autosave is paused.';
@@ -54,6 +72,8 @@
     if ($('zDirection')) $('zDirection').value = 'minus';
     if ($('manualResult')) $('manualResult').innerHTML = '<div class="big">X -- / Z --</div><div class="hint">Start a new job or edit a field to restart autosave.</div>';
     if ($('gcodeOut')) $('gcodeOut').textContent = 'Enter calculator values to generate draft G-code.';
+    if ($('jobsList')) $('jobsList').innerHTML = '<p class="hint">Local data cleared. Start a new job when ready.</p>';
+    if ($('recentJobsList')) $('recentJobsList').innerHTML = '<p class="hint">No recent jobs.</p>';
   }
   function handleClearLocal(event) {
     event.preventDefault();
@@ -75,7 +95,7 @@
   function dedupeByLabel(items) {
     const seen = new Set();
     return items.filter(item => {
-      const key = String(item.label || '').trim().toLowerCase();
+      const key = String(item.label || '').trim().toLowerCase().replace(/\s+/g, ' ');
       if (!key || seen.has(key)) return false;
       seen.add(key);
       return true;
@@ -99,12 +119,15 @@
     if (window.useTool) window.useTool(id);
     const tool = allTools().find(item => item.id === id);
     renderToolDetail(tool);
+    setTimeout(refreshLibrarySelectors, 0);
   }
   function useFeedFromList(id) {
     if (!id) return;
-    if (window.useFeed) window.useFeed(id);
-    const feed = allFeeds().find(item => item.id === id);
+    const realId = /^\d+$/.test(String(id)) ? `f${id}` : id;
+    if (window.useFeed) window.useFeed(realId);
+    const feed = allFeeds().find(item => item.id === realId);
     renderFeedDetail(feed);
+    setTimeout(refreshLibrarySelectors, 0);
   }
   function renderToolDetail(tool) {
     if (!$('toolDetail')) return;
@@ -117,9 +140,30 @@
   function refreshLibrarySelectors() {
     const tools = allTools();
     const feeds = allFeeds();
-    ['premadeTool', 'activeToolSelect', 'gcodeToolSelect', 'toolLibrarySelect'].forEach(id => { if ($(id)) $(id).innerHTML = optionList(tools, 'Choose tool...'); });
-    if ($('premadeFeed')) $('premadeFeed').innerHTML = '<option value="">Choose common speed/feed...</option>' + presetFeeds.map((feed, index) => `<option value="${index}">${esc(feed.label)}</option>`).join('');
-    if ($('feedLibrarySelect')) $('feedLibrarySelect').innerHTML = optionList(feeds, 'Choose speed/feed...');
+    const currentToolLabel = $('toolLabel')?.value?.trim();
+    const currentFeedLabel = $('feedLabel')?.value?.trim();
+    const currentTool = tools.find(item => item.label === currentToolLabel)?.id || '';
+    const currentFeed = feeds.find(item => item.label === currentFeedLabel)?.id || '';
+    ['premadeTool', 'activeToolSelect', 'gcodeToolSelect', 'toolLibrarySelect'].forEach(id => {
+      if ($(id)) { $(id).innerHTML = optionList(tools, id === 'toolLibrarySelect' ? 'Choose saved/custom tool...' : 'Choose tool...'); $(id).value = currentTool; }
+    });
+    if ($('premadeFeed')) {
+      $('premadeFeed').innerHTML = optionList(feeds, 'Choose speed/feed...');
+      $('premadeFeed').value = currentFeed;
+    }
+    if ($('feedLibrarySelect')) {
+      $('feedLibrarySelect').innerHTML = optionList(feeds, 'Choose saved/custom speed/feed...');
+      $('feedLibrarySelect').value = currentFeed;
+    }
+  }
+
+  function injectGdtSymbols() {
+    const symbols = $('symbolsView')?.querySelector('.refGrid');
+    if (!symbols || $('gdtSymbolList')) return;
+    const section = document.createElement('div');
+    section.className = 'card span-2';
+    section.innerHTML = `<h2>GD&T Operation Symbols</h2><div class="refGrid gdtGrid" id="gdtSymbolList">${gdSymbols.map(([name, note]) => `<p><strong>${esc(name)}</strong><span>${esc(note)}</span></p>`).join('')}</div>`;
+    $('symbolsView').appendChild(section);
   }
 
   function updateGeometry() {
@@ -177,7 +221,7 @@
     if (depth && direction === 'minus' && Number.isFinite(finalZ) && finalZ > 0) warnings.push('Z direction mismatch: plunge is set for Z minus, but parsed path ends at positive Z.');
     drawSim(moves);
     if ($('simCurrent')) $('simCurrent').textContent = `X ${fmt(x)} / Z ${fmt(z)}`;
-    if ($('simWarnings')) $('simWarnings').innerHTML = warnings.length ? warnings.map(w => `<div>${esc(w)}</div>`).join('') : '<span style="color:#c8f7c5">No basic warnings found. Still verify at the machine.</span>';
+    if ($('simWarnings')) $('simWarnings').innerHTML = warnings.length ? warnings.map(w => `<div>${esc(w)}</div>`).join('') : '<span class="okText">No basic warnings found. Still verify at the machine.</span>';
     if ($('simSteps')) $('simSteps').innerHTML = moves.map(move => `<div class="item simStep ${move.motion === 'G01' ? 'simFeed' : 'simRapid'}"><code>${move.motion}</code><span>${esc(move.code)}</span><strong>X${fmt(move.x)} Z${fmt(move.z)}</strong></div>`).join('') || '<p class="hint">No X/Z moves found in the generated code.</p>';
   }
   function drawSim(moves) {
@@ -186,42 +230,60 @@
     if (!moves.length) { svg.innerHTML = '<text x="24" y="42" class="plotLabel">No parsed toolpath yet.</text>'; return; }
     const pts = moves.filter(m => Number.isFinite(m.x) && Number.isFinite(m.z));
     if (!pts.length) { svg.innerHTML = '<text x="24" y="42" class="plotLabel">No complete X/Z positions found.</text>'; return; }
-    const width = 700, height = 340, pad = 42;
+    const width = 700, height = 340, pad = 48;
     let minX = Math.min(...pts.map(p => p.x)), maxX = Math.max(...pts.map(p => p.x)), minZ = Math.min(...pts.map(p => p.z)), maxZ = Math.max(...pts.map(p => p.z));
     if (maxX - minX < .001) { maxX += 1; minX -= 1; }
     if (maxZ - minZ < .001) { maxZ += .25; minZ -= .25; }
-    minX -= (maxX - minX) * .12; maxX += (maxX - minX) * .12; minZ -= (maxZ - minZ) * .18; maxZ += (maxZ - minZ) * .18;
+    const xPad = (maxX - minX) * .16 || .1;
+    const zPad = (maxZ - minZ) * .22 || .1;
+    minX -= xPad; maxX += xPad; minZ -= zPad; maxZ += zPad;
     const px = zVal => pad + (zVal - minZ) / (maxZ - minZ) * (width - pad * 2);
     const py = xVal => height - pad - (xVal - minX) / (maxX - minX) * (height - pad * 2);
-    const parts = [`<line x1="${pad}" y1="${height - pad}" x2="${width - pad}" y2="${height - pad}" class="plotGrid"/>`, `<line x1="${pad}" y1="${pad}" x2="${pad}" y2="${height - pad}" class="plotGrid"/>`, '<text x="42" y="24" class="plotLabel">Parsed X/Z path. Solid = G01 feed. Dashed = G00 rapid.</text>'];
-    moves.forEach(move => {
+    const z0 = minZ <= 0 && maxZ >= 0 ? px(0) : null;
+    const parts = [
+      `<rect x="0" y="0" width="${width}" height="${height}" class="plotBg"/>`,
+      `<line x1="${pad}" y1="${height - pad}" x2="${width - pad}" y2="${height - pad}" class="plotAxis"/>`,
+      `<line x1="${pad}" y1="${pad}" x2="${pad}" y2="${height - pad}" class="plotAxis"/>`,
+      `<text x="${width / 2 - 24}" y="${height - 12}" class="plotLabel">Z</text>`,
+      `<text x="12" y="${pad - 16}" class="plotLabel">X dia</text>`,
+      `<text x="${pad}" y="24" class="plotLabel">Solid orange = G01 feed. Dashed gray = G00 rapid.</text>`,
+      `<text x="${width - 178}" y="24" class="plotLegendFeed">feed</text>`,
+      `<text x="${width - 118}" y="24" class="plotLegendRapid">rapid</text>`
+    ];
+    if (z0 !== null) parts.push(`<line x1="${z0}" y1="${pad}" x2="${z0}" y2="${height - pad}" class="plotZero"/><text x="${z0 + 5}" y="${pad + 14}" class="plotLabel">Z0 face</text>`);
+    moves.forEach((move, index) => {
       if (!Number.isFinite(move.x) || !Number.isFinite(move.z)) return;
       const fromX = Number.isFinite(move.fromX) ? move.fromX : move.x;
       const fromZ = Number.isFinite(move.fromZ) ? move.fromZ : move.z;
-      parts.push(`<line x1="${px(fromZ)}" y1="${py(fromX)}" x2="${px(move.z)}" y2="${py(move.x)}" class="${move.motion === 'G01' ? 'plotPath' : 'plotRapid'}"/>`);
-      parts.push(`<circle cx="${px(move.z)}" cy="${py(move.x)}" r="5" class="${move.motion === 'G01' ? 'plotPoint' : 'plotSafe'}"/>`);
+      const cls = move.motion === 'G01' ? 'plotPath' : 'plotRapid';
+      const pointCls = move.motion === 'G01' ? 'plotPoint' : 'plotSafe';
+      parts.push(`<line x1="${px(fromZ)}" y1="${py(fromX)}" x2="${px(move.z)}" y2="${py(move.x)}" class="${cls}"/>`);
+      parts.push(`<circle cx="${px(move.z)}" cy="${py(move.x)}" r="6" class="${pointCls}"/>`);
+      parts.push(`<text x="${px(move.z) + 8}" y="${py(move.x) + 4}" class="plotStepLabel">${index + 1}</text>`);
     });
+    const first = pts[0];
     const last = pts[pts.length - 1];
-    parts.push(`<text x="${px(last.z) + 8}" y="${py(last.x) - 8}" class="plotLabel">X${fmt(last.x)} Z${fmt(last.z)}</text>`);
+    parts.push(`<circle cx="${px(first.z)}" cy="${py(first.x)}" r="8" class="plotStart"/><text x="${px(first.z) + 10}" y="${py(first.x) - 10}" class="plotLabel">start X${fmt(first.x)} Z${fmt(first.z)}</text>`);
+    parts.push(`<circle cx="${px(last.z)}" cy="${py(last.x)}" r="8" class="plotEnd"/><text x="${px(last.z) + 10}" y="${py(last.x) - 10}" class="plotLabel">current X${fmt(last.x)} Z${fmt(last.z)}</text>`);
     svg.innerHTML = parts.join('');
   }
 
   function wire() {
     ensureToolsListTarget();
+    injectGdtSymbols();
     showClearedState();
     refreshLibrarySelectors();
-    setTimeout(() => document.querySelector('.nav.active')?.click(), 0);
+    setTimeout(() => { document.querySelector('.nav.active')?.click(); refreshLibrarySelectors(); }, 0);
     $('clearBtn')?.addEventListener('click', handleClearLocal, true);
-    $('startNewAfterClearBtn')?.addEventListener('click', () => { restartAfterClear(); $('newJobBtn')?.click(); }, true);
+    $('startNewAfterClearBtn')?.addEventListener('click', event => { event.stopImmediatePropagation(); restartAfterClear(); $('newJobBtn')?.click(); }, true);
     document.querySelectorAll('input, textarea, select').forEach(field => field.addEventListener('input', restartAfterClear, { once: true }));
     ['premadeTool', 'activeToolSelect', 'gcodeToolSelect', 'toolLibrarySelect'].forEach(id => $(id)?.addEventListener('change', event => useToolFromList(event.target.value)));
-    $('feedLibrarySelect')?.addEventListener('change', event => useFeedFromList(event.target.value));
+    ['premadeFeed', 'feedLibrarySelect'].forEach(id => $(id)?.addEventListener('change', event => useFeedFromList(event.target.value)));
     $('saveToolBtn')?.addEventListener('click', () => setTimeout(refreshLibrarySelectors, 50));
     $('saveFeedBtn')?.addEventListener('click', () => setTimeout(refreshLibrarySelectors, 50));
+    document.querySelectorAll('.nav').forEach(button => button.addEventListener('click', () => setTimeout(() => { refreshLibrarySelectors(); if (button.dataset.view === 'simView') parseGcode(); }, 30)));
     document.querySelectorAll('#geometryView input').forEach(input => input.addEventListener('input', updateGeometry));
     $('runSimBtn')?.addEventListener('click', parseGcode);
-    document.querySelector('[data-view="simView"]')?.addEventListener('click', () => setTimeout(parseGcode, 50));
-    document.querySelector('[data-view="toolsView"]')?.addEventListener('click', () => setTimeout(refreshLibrarySelectors, 50));
     updateGeometry();
     parseGcode();
     if ('serviceWorker' in navigator && location.protocol !== 'file:') window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(console.warn));
