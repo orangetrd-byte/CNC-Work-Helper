@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cnc-lathe-work-helper-v17';
+const CACHE_NAME = 'cnc-lathe-work-helper-v18';
 const ASSETS = [
   './',
   './index.html',
