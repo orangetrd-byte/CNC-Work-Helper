@@ -1,31 +1,26 @@
 {
+  "id": "/CNC-Work-Helper/",
   "name": "CNC Lathe Work Helper",
   "short_name": "Lathe Helper",
-  "description": "Offline CNC lathe notes, manual movement calculator, tool library, and draft G-code output.",
-  "start_url": "./index.html",
-  "scope": "./",
+  "description": "Offline CNC lathe notes, setup reference, manual movement calculator, tool library, simulator preview, and G-code helper.",
+  "start_url": "/CNC-Work-Helper/",
+  "scope": "/CNC-Work-Helper/",
   "display": "standalone",
   "background_color": "#111318",
   "theme_color": "#a8c7fa",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "./icons/icon-192.png",
+      "src": "/CNC-Work-Helper/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./icons/icon-512.png",
+      "src": "/CNC-Work-Helper/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
-    },
-    {
-      "src": "./icons/app-icon-maskable.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
     }
   ]
 }
