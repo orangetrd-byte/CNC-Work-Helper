@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cnc-lathe-work-helper-v27';
+const CACHE_NAME = 'cnc-lathe-work-helper-v28';
 const ASSETS = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const ASSETS = [
   './polish.js',
   './uiux.js',
   './assistant.js',
+  './refnav-fix.js',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
@@ -21,7 +22,8 @@ const ASSETS = [
 const EXTRA_TAGS = [
   '<script src="./polish.js" defer></script>',
   '<script src="./uiux.js" defer></script>',
-  '<script src="./assistant.js" defer></script>'
+  '<script src="./assistant.js" defer></script>',
+  '<script src="./refnav-fix.js" defer></script>'
 ];
 
 self.addEventListener('install', event => {
