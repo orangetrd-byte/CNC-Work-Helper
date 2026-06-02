@@ -7,6 +7,13 @@
   let seenJob = '';
   let timer = null;
 
+  const gCodes = [
+    ['G00','Rapid positioning. Non-cutting move.'],['G01','Linear feed cutting move. Requires feed rate before/with move.'],['G02','Clockwise arc in selected plane. Needs R or I/K.'],['G03','Counterclockwise arc in selected plane. Needs R or I/K.'],['G04','Dwell. Pause for time or revolutions, depending on control.'],['G10','Programmable data/offset input. Verify control format.'],['G18','XZ plane selection for lathe work.'],['G20','Inch input.'],['G21','Metric input.'],['G22','Stored stroke/check on, control dependent.'],['G23','Stored stroke/check off, control dependent.'],['G27','Reference return check.'],['G28','Return to machine reference through commanded point.'],['G30','Second/third/fourth reference position return.'],['G32','Thread cutting move.'],['G40','Tool nose radius compensation cancel.'],['G41','Tool nose radius compensation left.'],['G42','Tool nose radius compensation right.'],['G50','Spindle speed clamp / coordinate setting depending on control. Often used with G96.'],['G53','Machine coordinate move, non-modal on many controls.'],['G54-G59','Work coordinate systems.'],['G65','Custom macro call, if enabled.'],['G70','Finishing cycle. System A lathe cycle.'],['G71','OD/ID roughing cycle. System A lathe cycle.'],['G72','Facing roughing cycle. System A lathe cycle.'],['G73','Pattern repeating cycle. System A lathe cycle.'],['G74','Face grooving / peck drilling cycle, control dependent.'],['G75','OD/ID grooving cycle, control dependent.'],['G76','Threading cycle. System A lathe cycle.'],['G80','Cancel canned cycle.'],['G90','Outer/inner diameter cutting cycle in lathe System A.'],['G92','Thread cutting cycle in lathe System A.'],['G94','End face turning/facing cycle in lathe System A.'],['G96','Constant surface speed. Use spindle limit such as G50.'],['G97','Fixed RPM mode / cancel CSS.'],['G98','Feed per minute on many lathes. Verify machine setting.'],['G99','Feed per revolution on many lathes. Common for turning.']
+  ];
+  const mCodes = [
+    ['M00','Program stop.'],['M01','Optional stop.'],['M02','Program end, older style.'],['M03','Spindle on clockwise/forward by common convention.'],['M04','Spindle on counterclockwise/reverse by common convention.'],['M05','Spindle stop.'],['M08','Coolant on.'],['M09','Coolant off.'],['M10','Chuck clamp or clamp output on some lathes. Verify machine.'],['M11','Chuck unclamp or clamp output off on some lathes. Verify machine.'],['M19','Spindle orient on many controls. Verify machine.'],['M30','Program end and rewind/reset.'],['M41','Low gear range on some machines. Verify machine.'],['M42','High gear range on some machines. Verify machine.'],['M43','Gear/range command on some machines. Verify machine.'],['M44','Gear/range command on some machines. Verify machine.'],['M98','Call subprogram.'],['M99','Return from subprogram / loop end.']
+  ];
+
   function state() { try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch { return {}; } }
   function job(st = state()) { return Array.isArray(st.jobs) ? st.jobs.find(j => j.id === st.currentJobId) || st.jobs[0] : null; }
   function save(st, msg = 'Saved local') { const j = job(st); if (j) j.updatedAt = new Date().toISOString(); localStorage.setItem(key, JSON.stringify(st)); if ($('saveStatus')) $('saveStatus').textContent = msg; }
@@ -16,6 +23,29 @@
   function setCode(text, persist = true, msg = 'Saved G-code') { if (editor()) editor().value = text; if ($('gcodeOut')) $('gcodeOut').textContent = text || 'Enter or generate G-code.'; if (persist) edit(j => { j.gcode.output = text; }, msg); }
   function scheduleParse() { clearTimeout(timer); timer = setTimeout(() => { syncEditor(false); runCheckAndPlot(); }, 120); }
 
+  function appendText(id, text) {
+    const field = $(id);
+    if (!field) return;
+    field.value = [field.value.trim(), text.trim()].filter(Boolean).join('\n\n');
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+    if ($('saveStatus')) $('saveStatus').textContent = 'Added note helper';
+  }
+  function injectBeginnerNotes() {
+    if ($('beginnerNotesPanel')) return;
+    $('notesView')?.insertAdjacentHTML('beforeend', `
+      <div id="beginnerNotesPanel" class="card span-2 beginner-panel">
+        <div class="section-head"><h2>First-Time Machinist Notes</h2><span class="mini">Use this page as the job home base.</span></div>
+        <div class="row actions note-helper-actions"><button id="insertSetupTemplateBtn" type="button">Setup Template</button><button id="insertToolTemplateBtn" type="button">Tool Template</button><button id="insertInspectTemplateBtn" type="button">Inspection Template</button></div>
+        <div class="note-guide-grid">
+          <div class="result compact"><div class="mini">Before touching off</div><ul class="quick"><li>Confirm part number, material, operation, and machine.</li><li>Write down chuck/jaw setup, stickout, and work offset.</li><li>Know which face is Z0 and which way Z cuts.</li></ul></div>
+          <div class="result compact"><div class="mini">Before pressing cycle start</div><ul class="quick"><li>Check tool station and offset match the program.</li><li>Check X is diameter-based and clearance is above stock.</li><li>Single block first motion and keep hand near feed hold.</li></ul></div>
+        </div>
+      </div>`);
+    $('insertSetupTemplateBtn')?.addEventListener('click', () => appendText('setupNotes', 'SETUP CHECK\nWork offset:\nZ0 face location:\nChuck/jaws:\nPie jaws/bore/step:\nStickout:\nStock diameter/length:\nSafe X/Z approach:\nAnything close to jaws/chuck:'));
+    $('insertToolTemplateBtn')?.addEventListener('click', () => appendText('toolNotes', 'TOOL CHECK\nTool station/offset:\nInsert/tool type:\nNose radius or tool width:\nStickout/holder clearance:\nTouch-off method:\nWear offset notes:\nCaution:'));
+    $('insertInspectTemplateBtn')?.addEventListener('click', () => appendText('setupNotes', 'INSPECTION CHECK\nFirst piece size to check:\nCritical diameter(s):\nCritical length(s):\nGauge/mic/caliper used:\nOffset adjustment made:\nFinal note for next time:'));
+  }
+
   function addPieJaws() {
     if (!$('pieJawNotes')) $('notesView')?.querySelector('.card')?.insertAdjacentHTML('beforeend', '<div class="row cnc-enhanced-row"><div class="field"><label for="pieJawNotes">Pie jaw notes</label><textarea id="pieJawNotes" placeholder="Pie jaws, bore/step, jaw pressure, soft jaw sketch notes"></textarea></div></div>');
     if (!$('pieJawSize')) $('chuckJaw')?.closest('.row')?.insertAdjacentHTML('afterend', '<div class="row cnc-enhanced-row"><div class="field"><label for="pieJawSize">Pie jaw OD / size</label><input id="pieJawSize" inputmode="decimal" placeholder="jaw size or chuck size"></div><div class="field"><label for="pieJawBore">Pie jaw bore / pocket</label><input id="pieJawBore" inputmode="decimal" placeholder="bore or pocket diameter"></div><div class="field"><label for="pieJawStep">Pie jaw step / grip</label><input id="pieJawStep" placeholder="step depth, grip land, pressure"></div></div>');
@@ -23,6 +53,20 @@
   }
   function fillJaws() { const s = job()?.setup || {}; ['pieJawNotes','pieJawSize','pieJawBore','pieJawStep'].forEach(id => { if ($(id)) $(id).value = s[id] || ''; }); }
   function captureJaws(persist) { if (!$('pieJawNotes')) return; edit(j => { ['pieJawNotes','pieJawSize','pieJawBore','pieJawStep'].forEach(id => { j.setup[id] = $(id)?.value.trim() || ''; }); }, persist ? 'Saved pie jaws' : 'Saved local'); }
+
+  function injectReference() {
+    if ($('systemAReferencePanel')) return;
+    const list = arr => arr.map(([code, note]) => `<div class="code-row"><strong>${esc(code)}</strong><span>${esc(note)}</span></div>`).join('');
+    $('handbookView')?.insertAdjacentHTML('beforeend', `
+      <div id="systemAReferencePanel" class="card span-2 code-reference-panel">
+        <div class="section-head"><h2>Lathe System A G-Code Reference</h2><span class="mini">Verify machine-specific options.</span></div>
+        <div class="code-reference-grid">${list(gCodes)}</div>
+      </div>
+      <div class="card span-2 code-reference-panel">
+        <div class="section-head"><h2>Common M-Code Reference</h2><span class="mini">M-codes vary by machine builder.</span></div>
+        <div class="code-reference-grid mcode-grid">${list(mCodes)}</div>
+      </div>`);
+  }
 
   function injectEditor() {
     if ($('gcodeEditorPanel')) return;
@@ -80,19 +124,21 @@
     return current;
   }
   function parseCode() {
-    const supportedG = new Set(['G0','G00','G1','G01','G2','G02','G3','G03','G4','G04','G10','G18','G20','G21','G22','G23','G27','G28','G30','G32','G40','G41','G42','G50','G53','G54','G55','G56','G57','G58','G59','G65','G70','G71','G72','G73','G74','G75','G76','G80','G90','G92','G94','G96','G97','G98','G99']);
-    const supportedM = new Set(['M0','M00','M1','M01','M3','M03','M4','M04','M5','M05','M8','M08','M9','M09','M30']);
+    const supportedG = new Set(gCodes.flatMap(([code]) => code.includes('-') ? [] : [code]));
+    ['G0','G1','G2','G3','G4'].forEach(c => supportedG.add(c));
+    const supportedM = new Set(mCodes.flatMap(([code]) => code.includes('-') ? [] : [code]));
+    ['M0','M1','M2','M3','M4','M5','M8','M9'].forEach(c => supportedM.add(c));
     let x = null, z = null, motion = null, feedActive = false, hasTool = false, hasSpindle = false, hasG50 = false, hasG96 = false;
     const warnings = [], moves = [], unsupported = [];
     codeText().split(/\r?\n/).forEach((raw, i) => {
       const line = stripComment(raw); if (!line || line === '%') return;
-      const gCodes = compactCodes(line, 'G'), mCodes = compactCodes(line, 'M');
-      [...gCodes, ...mCodes].forEach(code => { if (code[0] === 'G' && !supportedG.has(code) && !supportedG.has(norm(code))) unsupported.push(`Line ${i + 1}: unsupported ${code} for System A checker.`); if (code[0] === 'M' && !supportedM.has(code) && !supportedM.has(norm(code))) unsupported.push(`Line ${i + 1}: unsupported ${code}.`); });
+      const gList = compactCodes(line, 'G'), mList = compactCodes(line, 'M');
+      [...gList, ...mList].forEach(code => { if (code[0] === 'G' && !supportedG.has(code) && !supportedG.has(norm(code))) unsupported.push(`Line ${i + 1}: unsupported ${code} for System A checker.`); if (code[0] === 'M' && !supportedM.has(code) && !supportedM.has(norm(code))) unsupported.push(`Line ${i + 1}: unsupported ${code}.`); });
       if (/\bT\s*\d+/i.test(line)) hasTool = true;
       if (/M\s*0?3|M\s*0?4/i.test(line)) hasSpindle = true;
-      if (gCodes.some(c => c === 'G50')) hasG50 = true;
-      if (gCodes.some(c => c === 'G96')) hasG96 = true;
-      motion = systemAMotion(gCodes, motion);
+      if (gList.some(c => c === 'G50')) hasG50 = true;
+      if (gList.some(c => c === 'G96')) hasG96 = true;
+      motion = systemAMotion(gList, motion);
       const w = words(line);
       if (Number.isFinite(w.F)) feedActive = true;
       if ((motion === 'G02' || motion === 'G03') && (Number.isFinite(w.X) || Number.isFinite(w.Z)) && !Number.isFinite(w.R) && !Number.isFinite(w.I) && !Number.isFinite(w.K)) warnings.push(`Line ${i + 1}: arc move missing R, I, or K.`);
@@ -100,7 +146,7 @@
       const nx = Number.isFinite(w.X) ? w.X : x, nz = Number.isFinite(w.Z) ? w.Z : z;
       if ((Number.isFinite(w.X) || Number.isFinite(w.Z)) && motion) { moves.push({ line: i + 1, code: raw.trim(), motion, fromX: x, fromZ: z, x: nx, z: nz }); x = nx; z = nz; }
       if (Number.isFinite(w.X) && w.X < 0) warnings.push(`Line ${i + 1}: X below zero.`);
-      if (['G90','G92','G94'].some(c => gCodes.includes(c))) warnings.push(`Line ${i + 1}: ${gCodes.find(c => ['G90','G92','G94'].includes(c))} read as a lathe System A cycle.`);
+      if (['G90','G92','G94'].some(c => gList.includes(c))) warnings.push(`Line ${i + 1}: ${gList.find(c => ['G90','G92','G94'].includes(c))} read as a lathe System A cycle.`);
     });
     if (!hasTool) warnings.unshift('Missing tool call T word.');
     if (!hasSpindle) warnings.unshift('Missing spindle start M03/M04.');
@@ -121,8 +167,7 @@
     if ($('editorPlotStatus')) $('editorPlotStatus').textContent = parsed.moves.length ? `${parsed.moves.length} plotted move${parsed.moves.length === 1 ? '' : 's'}` : 'No path yet';
   }
   function drawPlot(moves) {
-    const svgs = ['simPlot','editorPlot'].map(id => $(id)).filter(Boolean);
-    if (!svgs.length) return;
+    const svgs = ['simPlot','editorPlot'].map(id => $(id)).filter(Boolean); if (!svgs.length) return;
     const pts = moves.filter(m => Number.isFinite(m.x) && Number.isFinite(m.z));
     if (!pts.length) { svgs.forEach(svg => svg.innerHTML = '<text x="24" y="42" class="plotLabel">No parsed X/Z path yet.</text>'); return; }
     const setup = job()?.setup || {}, stock = num(setup.stockDiameter || $('stockDiameter')?.value), len = num(setup.stockLength || $('stockLength')?.value), face = num($('faceZ')?.value) ?? 0;
@@ -138,7 +183,7 @@
   }
   function refresh() { fillJaws(); const source = job()?.gcode?.output || ''; if (source && editor()) setCode(source, false); runCheckAndPlot(); }
   function wire() {
-    addPieJaws(); injectEditor(); fillJaws(); refresh();
+    injectBeginnerNotes(); addPieJaws(); injectReference(); injectEditor(); fillJaws(); refresh();
     const oldLoad = window.loadJob; if (typeof oldLoad === 'function' && !window.__cncEditorLoad) { window.__cncEditorLoad = true; window.loadJob = function() { const r = oldLoad.apply(this, arguments); setTimeout(refresh, 130); return r; }; }
     const oldDup = window.duplicateJob; if (typeof oldDup === 'function' && !window.__cncEditorDup) { window.__cncEditorDup = true; window.duplicateJob = function() { const r = oldDup.apply(this, arguments); setTimeout(refresh, 130); return r; }; }
     $('runSimBtn')?.addEventListener('click', e => { e.stopImmediatePropagation(); runCheckAndPlot(); }, true); $('copyGcodeBtn')?.addEventListener('click', e => { e.stopImmediatePropagation(); copyCode(); }, true); $('refreshGcodeBtn')?.addEventListener('click', e => { e.stopImmediatePropagation(); generateFromCalculator(); }, true);
