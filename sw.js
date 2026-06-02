@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cnc-lathe-work-helper-v31';
+const CACHE_NAME = 'cnc-lathe-work-helper-v32';
 const ASSETS = [
   './',
   './index.html',
@@ -11,6 +11,7 @@ const ASSETS = [
   './uiux.js',
   './assistant.js',
   './refnav-fix.js',
+  './autosave-fix.js',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png'
