@@ -36,13 +36,14 @@
         <div class="field"><label for="gcodeEditor">Editable G-code</label><textarea id="gcodeEditor" class="gcode-editor" spellcheck="false" placeholder="Type or paste full G-code here. Typed code is the source of truth."></textarea></div>
         <div class="row actions editor-actions"><button id="genCalcBtn" type="button">Generate from calculator</button><button id="checkCodeBtn" class="primary" type="button">Check code</button><button id="simulateCodeBtn" type="button">Simulate</button><button id="plotCodeBtn" type="button">Plot</button><button id="copyEditorBtn" type="button">Copy</button><button id="clearEditorBtn" class="ghost" type="button">Clear</button><button id="saveCodeBtn" type="button">Save to job</button></div>
         <div class="row"><div class="result warn compact"><div class="mini">Warnings</div><div id="editorWarnings" class="warnList">Paste or type code, then check it.</div></div><div class="result compact"><div class="mini">Parsed position</div><div id="editorPosition" class="medium">X -- / Z --</div></div></div>
+        <div class="result editor-plot-panel"><div class="section-head"><h2>Plot Preview</h2><span class="mini" id="editorPlotStatus">Reads typed G-code</span></div><div class="plotWrap"><svg id="editorPlot" class="plotSvg tall" viewBox="0 0 700 340" role="img" aria-label="Typed G-code plot preview"></svg></div></div>
       </div>`);
     setCode(source.includes('Enter calculator values') ? '' : source, false);
     editor()?.addEventListener('input', () => { syncEditor(true); scheduleParse(); });
     $('genCalcBtn')?.addEventListener('click', generateFromCalculator);
     $('checkCodeBtn')?.addEventListener('click', runCheckAndPlot);
     $('simulateCodeBtn')?.addEventListener('click', () => { runCheckAndPlot(); document.querySelector('[data-view="simView"]')?.click(); });
-    $('plotCodeBtn')?.addEventListener('click', runCheckAndPlot);
+    $('plotCodeBtn')?.addEventListener('click', () => { runCheckAndPlot(); $('editorPlot')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); });
     $('copyEditorBtn')?.addEventListener('click', copyCode);
     $('clearEditorBtn')?.addEventListener('click', () => { setCode('', true, 'Cleared G-code'); runCheckAndPlot(); });
     $('saveCodeBtn')?.addEventListener('click', () => { syncEditor(true, 'Saved G-code'); runCheckAndPlot(); });
@@ -117,9 +118,13 @@
     const html = parsed.warnings.length ? [...new Set(parsed.warnings)].map(w => `<div>${esc(w)}</div>`).join('') : '<span class="okText">No basic warnings found. Still verify at the machine.</span>';
     if ($('editorWarnings')) $('editorWarnings').innerHTML = html; if ($('simWarnings')) $('simWarnings').innerHTML = html; if ($('editorPosition')) $('editorPosition').textContent = `X ${fmt(parsed.x)} / Z ${fmt(parsed.z)}`; if ($('simCurrent')) $('simCurrent').textContent = `X ${fmt(parsed.x)} / Z ${fmt(parsed.z)}`;
     if ($('simSteps')) $('simSteps').innerHTML = parsed.moves.slice(0, 100).map(m => `<div class="item simStep ${m.motion === 'G00' ? 'simRapid' : 'simFeed'}"><code>${m.motion}</code><span>${esc(m.code)}</span><strong>X${fmt(m.x)} Z${fmt(m.z)}</strong></div>`).join('') || '<p class="hint">No X/Z moves found in the typed code.</p>';
+    if ($('editorPlotStatus')) $('editorPlotStatus').textContent = parsed.moves.length ? `${parsed.moves.length} plotted move${parsed.moves.length === 1 ? '' : 's'}` : 'No path yet';
   }
   function drawPlot(moves) {
-    const svg = $('simPlot'); if (!svg) return; const pts = moves.filter(m => Number.isFinite(m.x) && Number.isFinite(m.z)); if (!pts.length) { svg.innerHTML = '<text x="24" y="42" class="plotLabel">No parsed X/Z path yet.</text>'; return; }
+    const svgs = ['simPlot','editorPlot'].map(id => $(id)).filter(Boolean);
+    if (!svgs.length) return;
+    const pts = moves.filter(m => Number.isFinite(m.x) && Number.isFinite(m.z));
+    if (!pts.length) { svgs.forEach(svg => svg.innerHTML = '<text x="24" y="42" class="plotLabel">No parsed X/Z path yet.</text>'); return; }
     const setup = job()?.setup || {}, stock = num(setup.stockDiameter || $('stockDiameter')?.value), len = num(setup.stockLength || $('stockLength')?.value), face = num($('faceZ')?.value) ?? 0;
     const W = 700, H = 340, P = 48, back = len ? face - len : Math.min(...pts.map(p => p.z), face - 0.5), xs = pts.map(p => p.x).concat(stock ? [stock, 0] : []), zs = pts.map(p => p.z).concat([face, back]);
     let minX = Math.min(...xs), maxX = Math.max(...xs), minZ = Math.min(...zs), maxZ = Math.max(...zs); if (maxX - minX < .001) { maxX++; minX--; } if (maxZ - minZ < .001) { maxZ += .25; minZ -= .25; } minX -= (maxX - minX) * .16; maxX += (maxX - minX) * .16; minZ -= (maxZ - minZ) * .22; maxZ += (maxZ - minZ) * .22;
@@ -128,7 +133,8 @@
     if (stock) out.push(`<rect x="${px(back)}" y="${py(stock)}" width="${Math.max(1, px(face) - px(back))}" height="${Math.max(1, py(0) - py(stock))}" class="plotStock"/><text x="${px(back)+6}" y="${py(stock)-8}" class="plotLabel">stock X${fmt(stock)}</text>`);
     out.push(`<line x1="${px(face)}" y1="${P}" x2="${px(face)}" y2="${H-P}" class="plotZero"/><text x="${px(face)+5}" y="${P+14}" class="plotLabel">Z face</text>`);
     const feed = []; moves.forEach((m, i) => { if (!Number.isFinite(m.x) || !Number.isFinite(m.z)) return; const fx = Number.isFinite(m.fromX) ? m.fromX : m.x, fz = Number.isFinite(m.fromZ) ? m.fromZ : m.z, isFeed = m.motion !== 'G00'; if (isFeed) feed.push(`${px(m.z)},${py(m.x)}`); out.push(`<line x1="${px(fz)}" y1="${py(fx)}" x2="${px(m.z)}" y2="${py(m.x)}" class="${isFeed ? 'plotPath' : 'plotRapid'}"/>`, `<circle cx="${px(m.z)}" cy="${py(m.x)}" r="6" class="${isFeed ? 'plotPoint' : 'plotSafe'}"/>`, `<text x="${px(m.z)+8}" y="${py(m.x)+4}" class="plotStepLabel">${i+1}</text>`); });
-    if (feed.length > 1) out.push(`<polyline points="${feed.join(' ')}" class="plotCutOutline"/>`); const last = pts[pts.length - 1]; out.push(`<circle cx="${px(last.z)}" cy="${py(last.x)}" r="8" class="plotEnd"/><text x="${px(last.z)+10}" y="${py(last.x)-10}" class="plotLabel">current X${fmt(last.x)} Z${fmt(last.z)}</text>`); svg.innerHTML = out.join('');
+    if (feed.length > 1) out.push(`<polyline points="${feed.join(' ')}" class="plotCutOutline"/>`); const last = pts[pts.length - 1]; out.push(`<circle cx="${px(last.z)}" cy="${py(last.x)}" r="8" class="plotEnd"/><text x="${px(last.z)+10}" y="${py(last.x)-10}" class="plotLabel">current X${fmt(last.x)} Z${fmt(last.z)}</text>`);
+    svgs.forEach(svg => svg.innerHTML = out.join(''));
   }
   function refresh() { fillJaws(); const source = job()?.gcode?.output || ''; if (source && editor()) setCode(source, false); runCheckAndPlot(); }
   function wire() {
@@ -136,7 +142,7 @@
     const oldLoad = window.loadJob; if (typeof oldLoad === 'function' && !window.__cncEditorLoad) { window.__cncEditorLoad = true; window.loadJob = function() { const r = oldLoad.apply(this, arguments); setTimeout(refresh, 130); return r; }; }
     const oldDup = window.duplicateJob; if (typeof oldDup === 'function' && !window.__cncEditorDup) { window.__cncEditorDup = true; window.duplicateJob = function() { const r = oldDup.apply(this, arguments); setTimeout(refresh, 130); return r; }; }
     $('runSimBtn')?.addEventListener('click', e => { e.stopImmediatePropagation(); runCheckAndPlot(); }, true); $('copyGcodeBtn')?.addEventListener('click', e => { e.stopImmediatePropagation(); copyCode(); }, true); $('refreshGcodeBtn')?.addEventListener('click', e => { e.stopImmediatePropagation(); generateFromCalculator(); }, true);
-    document.querySelectorAll('.nav').forEach(b => b.addEventListener('click', () => setTimeout(() => { const id = job()?.id || ''; if (id !== seenJob) { seenJob = id; refresh(); } if (b.dataset.view === 'simView') runCheckAndPlot(); }, 100)));
+    document.querySelectorAll('.nav').forEach(b => b.addEventListener('click', () => setTimeout(() => { const id = job()?.id || ''; if (id !== seenJob) { seenJob = id; refresh(); } if (b.dataset.view === 'simView' || b.dataset.view === 'gcodeView') runCheckAndPlot(); }, 100)));
     setInterval(() => { const id = job()?.id || ''; if (id && id !== seenJob) { seenJob = id; refresh(); } }, 1200);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire); else wire();
