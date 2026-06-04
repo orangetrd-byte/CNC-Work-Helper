@@ -1,0 +1,111 @@
+:root {
+  --primary: #a8d8ff;
+  --on-primary: #07304f;
+  --primary-container: #1f4d6f;
+  --on-primary-container: #d8ecff;
+  --secondary: #c6d4e6;
+  --secondary-container: #263544;
+  --on-secondary-container: #e0ecf8;
+  --tertiary: #9bd8b4;
+  --on-tertiary: #0f321f;
+  --error: #ffb4ab;
+  --error-container: #7b1010;
+  --ok: #9bd8b4;
+}
+
+.card,
+.item,
+.result,
+input,
+select,
+textarea,
+.plotWrap,
+.job-card-output,
+.code-row,
+.code-category,
+.mini-calc,
+.tap-table,
+.controller-profile-panel,
+.canned-cycle-panel,
+.setup-photo-preview,
+.job-actions-list,
+.uiux-fab div {
+  border-color: rgba(168, 216, 255, 0.22) !important;
+}
+
+.tone-notes .card,
+.tone-setup .card,
+.tone-tools .card,
+.tone-gcode .card,
+.tone-ref .card,
+.job-search-panel,
+.compact-job-search {
+  border-left-color: #8fd3ff !important;
+}
+
+.tone-warn .card,
+.warn,
+.warnList div,
+.warning-help-grid p {
+  border-color: rgba(255, 180, 171, 0.42) !important;
+}
+
+.save-signal.saved span,
+.plotStart {
+  background: var(--ok) !important;
+  fill: var(--ok) !important;
+}
+
+.save-signal.unsaved span {
+  background: #8fd3ff !important;
+}
+
+.save-signal.unsaved {
+  color: #d8ecff !important;
+  border-color: rgba(168, 216, 255, 0.28) !important;
+}
+
+.plotPath,
+.plotPoint,
+.plotEnd {
+  stroke: var(--primary) !important;
+  fill: var(--primary) !important;
+}
+
+.plotRapid,
+.plotSafe {
+  stroke: #c6d4e6 !important;
+  fill: #c6d4e6 !important;
+}
+
+.plotLegendFeed {
+  fill: var(--primary) !important;
+}
+
+.plotLabel:first-child,
+.plotSvg text {
+  letter-spacing: 0;
+}
+
+.uiux-tab.active,
+.ref-chip.active,
+.primary,
+.job-actions-menu summary,
+.uiux-fab summary {
+  background: var(--primary) !important;
+  color: var(--on-primary) !important;
+}
+
+.polish-panel {
+  background: linear-gradient(180deg, rgba(168, 216, 255, 0.16), rgba(168, 216, 255, 0.06)) !important;
+  border-color: rgba(168, 216, 255, 0.35) !important;
+}
+
+.rough-sim-note {
+  border-color: rgba(168, 216, 255, 0.4) !important;
+}
+
+/* Replace the old visual legend wording without touching JavaScript-generated paths. */
+.sim-badge::after {
+  content: " Feed lines are blue. Rapid/retract lines are gray.";
+}
