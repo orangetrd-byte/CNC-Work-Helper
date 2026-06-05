@@ -1,6 +1,7 @@
 (() => {
   const storeKey = 'cncLatheWorkHelper.v4';
   const legacyKey = 'cncLatheWorkHelper.v3';
+  const clearFlag = 'cncLatheWorkHelper.justCleared';
   const assistantKeys = new Set([
     'cncLatheWorkHelper.geminiApiKey',
     'cncLatheWorkHelper.geminiModel',
@@ -81,6 +82,7 @@
 
   function pruneBlankUntitledJobs() {
     const state = pruneState(read());
+    if (!Array.isArray(state.jobs)) return;
     allowImmediate(() => localStorage.setItem(storeKey, JSON.stringify(state)));
   }
 
@@ -101,21 +103,16 @@
     };
   }
 
-  function clearFields() {
-    document.querySelectorAll('input, textarea').forEach(el => {
-      if (el.closest('#geminiAssistantPanel')) return;
-      if (el.type === 'file') el.value = '';
-      else if (el.type !== 'checkbox' && el.type !== 'radio') el.value = '';
-    });
-    if ($('faceZ')) $('faceZ').value = '0.000';
-    if ($('zDirection')) $('zDirection').value = 'minus';
-    if ($('manualResult')) $('manualResult').innerHTML = '<div class="big">X -- / Z --</div><div class="hint">Start a new job or enter values to resume autosave.</div>';
-    if ($('gcodeEditor')) $('gcodeEditor').value = '';
-    if ($('gcodeOut')) $('gcodeOut').textContent = 'Enter or generate G-code.';
+  function showClearedState() {
+    if (sessionStorage.getItem(clearFlag) !== '1') return;
+    sessionStorage.removeItem(clearFlag);
+    suppressUntilEdit = true;
+    $('startNewAfterClearBtn')?.classList.remove('hidden');
+    if ($('saveStatus')) $('saveStatus').textContent = 'Local data cleared';
+    if ($('manualResult')) $('manualResult').innerHTML = '<div class="big">X -- / Z --</div><div class="hint">Tap Start New Job or edit a field to begin a new local save.</div>';
     if ($('jobsList')) $('jobsList').innerHTML = '<p class="hint">Local data cleared. Tap Start New Job to begin again.</p>';
     if ($('recentJobsList')) $('recentJobsList').innerHTML = '<p class="hint">No recent jobs.</p>';
     if ($('setupJobsList')) $('setupJobsList').innerHTML = '<p class="hint">No saved job references.</p>';
-    $('startNewAfterClearBtn')?.classList.remove('hidden');
   }
 
   function clearLocal(event) {
@@ -131,8 +128,8 @@
       localStorage.removeItem(storeKey);
       localStorage.removeItem(legacyKey);
     });
-    clearFields();
-    markSaved('Local data cleared');
+    sessionStorage.setItem(clearFlag, '1');
+    location.reload();
   }
 
   function resumeAfterEdit(event) {
@@ -155,7 +152,7 @@
     document.addEventListener('input', resumeAfterEdit, true);
     document.addEventListener('change', resumeAfterEdit, true);
     ['newJobBtn','saveJobBtn','duplicateJobBtn','loadJobBtn','saveCodeBtn'].forEach(id => $(id)?.addEventListener('click', () => setTimeout(pruneBlankUntitledJobs, 250)));
-    setTimeout(pruneBlankUntitledJobs, 800);
+    setTimeout(() => { showClearedState(); pruneBlankUntitledJobs(); }, 800);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire); else wire();
