@@ -143,7 +143,7 @@
   function wire() {
     patchStorage();
     document.addEventListener('click', event => {
-      if (event.target?.closest?.('#newJobBtn, #saveJobBtn, #duplicateJobBtn, #loadJobBtn, #setupNewJobBtn, #setupLoadJobBtn, #saveSetupBtn, #saveCodeBtn, #exportJobBtn, #exportAllBtn, #startNewAfterClearBtn')) {
+      if (event.target?.closest?.('#newJobBtn, #saveJobBtn, #duplicateJobBtn, #loadJobBtn, #setupNewJobBtn, #setupLoadJobBtn, #saveSetupBtn, #saveCodeBtn, #saveSnippetBtn, #deleteSnippetBtn, #exportJobBtn, #exportAllBtn, #startNewAfterClearBtn')) {
         suppressUntilEdit = false;
         allowImmediateUntil = Date.now() + 1000;
       }
