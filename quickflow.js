@@ -143,8 +143,8 @@
     if (toIndex > 0) {
       const touch = num(tokens[toIndex - 1]);
       const target = num(tokens[toIndex + 1]);
-      const zIndex = tokens.indexOf('z');
-      const z = zIndex >= 0 ? num(tokens[zIndex + 1]) : tokenNumber(tokens, ['depth', 'plunge']);
+      const zMatch = text.match(/\bz\s*(-?\d*\.?\d+)/) || text.match(/\bz(-?\d*\.?\d+)/);
+      const z = zMatch ? num(zMatch[1]) : tokenNumber(tokens, ['depth', 'plunge']);
       if (touch !== null && target !== null) {
         const radial = Math.abs(touch - target) / 2;
         const zTarget = z !== null ? z : null;
