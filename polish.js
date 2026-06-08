@@ -233,7 +233,7 @@
     if ($('appVersionInfo')) return;
     $('handbookView')?.insertAdjacentHTML('beforeend', `
       <div id="appVersionInfo" class="card span-2 version-info-card">
-        <div class="section-head"><h2>Version Info</h2><span class="mini">PWA cache v40</span></div>
+        <div class="section-head"><h2>Version Info</h2><span class="mini">PWA cache v41</span></div>
         <div class="refGrid version-info-grid">
           <p><strong>App</strong><span>CNC Lathe Work Helper</span></p>
           <p><strong>Version</strong><span>Compact Assistant Key</span></p>
