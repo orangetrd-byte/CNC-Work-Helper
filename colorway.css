@@ -1,53 +1,238 @@
 :root {
-  --primary: #a8d8ff;
-  --on-primary: #07304f;
-  --primary-container: #1f4d6f;
-  --on-primary-container: #d8ecff;
-  --secondary: #c6d4e6;
-  --secondary-container: #263544;
-  --on-secondary-container: #e0ecf8;
-  --tertiary: #9bd8b4;
-  --on-tertiary: #0f321f;
-  --error: #ffb4ab;
-  --error-container: #7b1010;
-  --ok: #9bd8b4;
+  color-scheme: light;
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface1: #fff8f4;
+  --surface2: #fff1e8;
+  --surface3: #ffe8d8;
+  --text: #241a14;
+  --muted: #6f5b50;
+  --outline: #8b776b;
+  --border: #ead0c1;
+  --primary: #a94100;
+  --on-primary: #ffffff;
+  --primary-container: #ffdcc7;
+  --on-primary-container: #351000;
+  --secondary: #795846;
+  --secondary-container: #ffdcc7;
+  --on-secondary-container: #2d160a;
+  --tertiary: #6a5f26;
+  --on-tertiary: #ffffff;
+  --error: #ba1a1a;
+  --error-container: #ffdad6;
+  --ok: #2f7d32;
+  --shadow: 0 1px 2px rgba(55, 28, 10, 0.08), 0 8px 24px rgba(92, 45, 12, 0.10);
+}
+
+html,
+body {
+  background: #ffffff !important;
+  color: var(--text) !important;
+}
+
+header {
+  background: linear-gradient(180deg, #ffffff 78%, rgba(255, 255, 255, 0)) !important;
 }
 
 .card,
+.drawer {
+  background: var(--surface1) !important;
+  border-color: rgba(169, 65, 0, 0.16) !important;
+  box-shadow: var(--shadow) !important;
+}
+
 .item,
 .result,
-input,
-select,
-textarea,
-.plotWrap,
-.job-card-output,
+.mode-row,
+.refGrid p,
 .code-row,
 .code-category,
 .mini-calc,
 .tap-table,
+.snippet-library,
+.snippet-save-box,
 .controller-profile-panel,
 .canned-cycle-panel,
-.setup-photo-preview,
 .job-actions-list,
-.uiux-fab div {
-  border-color: rgba(168, 216, 255, 0.22) !important;
+.uiux-fab div,
+.sample-strip button {
+  background: var(--surface2) !important;
+  border-color: rgba(169, 65, 0, 0.18) !important;
 }
 
-.tone-notes .card,
-.tone-setup .card,
-.tone-tools .card,
-.tone-gcode .card,
-.tone-ref .card,
-.job-search-panel,
-.compact-job-search {
-  border-left-color: #8fd3ff !important;
+input,
+select,
+textarea,
+pre,
+code,
+.job-card-output,
+.snippet-preview,
+.gcode-editor {
+  background: #ffffff !important;
+  color: var(--text) !important;
+  border-color: rgba(139, 119, 107, 0.64) !important;
 }
 
-.tone-warn .card,
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(169, 65, 0, 0.16) !important;
+}
+
+::placeholder {
+  color: #92786a !important;
+}
+
+.sub,
+.hint,
+.mini,
+label,
+.quick,
+.item p,
+.code-row span,
+.code-category ul,
+.tap-table p,
+.footer-nav button,
+.uiux-tab,
+.ref-chip,
+.seg {
+  color: var(--muted) !important;
+}
+
+.status-row span,
+.badge,
+button {
+  background: var(--secondary-container) !important;
+  color: var(--on-secondary-container) !important;
+}
+
+.primary,
+.uiux-tab.active,
+.ref-chip.active,
+.job-actions-menu summary,
+.uiux-fab summary {
+  background: var(--primary) !important;
+  color: var(--on-primary) !important;
+}
+
+.seg.active,
+.footer-nav .active {
+  background: var(--primary-container) !important;
+  color: var(--on-primary-container) !important;
+}
+
+.ghost {
+  background: transparent !important;
+  color: var(--primary) !important;
+  border-color: rgba(169, 65, 0, 0.42) !important;
+}
+
+.danger {
+  background: var(--error-container) !important;
+  color: var(--error) !important;
+  border-color: rgba(186, 26, 26, 0.28) !important;
+}
+
+.big,
+.refGrid strong,
+.code-row strong,
+.code-category h3,
+.mini-calc h3,
+.tap-table h3,
+code {
+  color: var(--primary) !important;
+}
+
+.medium,
+.item strong {
+  color: var(--text) !important;
+}
+
+.uiux-tabs,
+.footer-nav {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border-color: rgba(169, 65, 0, 0.14) !important;
+}
+
+.uiux-tab,
+.ref-chip {
+  background: var(--surface2) !important;
+  border-color: rgba(169, 65, 0, 0.16) !important;
+}
+
+.reference-hub {
+  background: var(--surface1) !important;
+}
+
+.drawer {
+  box-shadow: -12px 0 28px rgba(92, 45, 12, 0.14) !important;
+}
+
+.scrim {
+  background: rgba(54, 27, 12, 0.28) !important;
+}
+
+.plotWrap,
+.plotBg {
+  background: #fff8f4 !important;
+  fill: #fff8f4 !important;
+  border-color: rgba(169, 65, 0, 0.18) !important;
+}
+
+.plotLabel {
+  fill: #5f4334 !important;
+}
+
+.plotStepLabel {
+  fill: #ffffff !important;
+}
+
+.plotAxis,
+.plotGrid {
+  stroke: #c6aa99 !important;
+}
+
+.plotZero,
+.plotPath,
+.plotPoint,
+.plotEnd,
+.plotLegendFeed {
+  stroke: var(--primary) !important;
+  fill: var(--primary) !important;
+}
+
+.plotRapid,
+.plotSafe,
+.plotLegendRapid {
+  stroke: #8b776b !important;
+  fill: #8b776b !important;
+}
+
+.plotStock {
+  fill: rgba(255, 140, 66, 0.14) !important;
+  stroke: rgba(169, 65, 0, 0.36) !important;
+}
+
+.plotCutOutline {
+  stroke: #5f2600 !important;
+  opacity: 0.16 !important;
+}
+
 .warn,
 .warnList div,
 .warning-help-grid p {
-  border-color: rgba(255, 180, 171, 0.42) !important;
+  background: rgba(255, 218, 214, 0.72) !important;
+  border-color: rgba(186, 26, 26, 0.32) !important;
+  color: #410002 !important;
+}
+
+.warnList {
+  color: #410002 !important;
+}
+
+.okText {
+  color: #1f6b2a !important;
 }
 
 .save-signal.saved span,
@@ -57,55 +242,52 @@ textarea,
 }
 
 .save-signal.unsaved span {
-  background: #8fd3ff !important;
+  background: #d96d00 !important;
 }
 
 .save-signal.unsaved {
-  color: #d8ecff !important;
-  border-color: rgba(168, 216, 255, 0.28) !important;
+  color: #7a3500 !important;
+  border-color: rgba(169, 65, 0, 0.32) !important;
 }
 
-.plotPath,
-.plotPoint,
-.plotEnd {
-  stroke: var(--primary) !important;
-  fill: var(--primary) !important;
+.tone-notes .card,
+.tone-setup .card,
+.tone-tools .card,
+.tone-gcode .card,
+.tone-ref .card,
+.job-search-panel,
+.compact-job-search,
+.version-info-card {
+  border-left-color: var(--primary) !important;
 }
 
-.plotRapid,
-.plotSafe {
-  stroke: #c6d4e6 !important;
-  fill: #c6d4e6 !important;
+.tone-warn .card {
+  border-left-color: var(--error) !important;
 }
 
-.plotLegendFeed {
-  fill: var(--primary) !important;
+.polish-panel,
+.quick-flow-panel,
+.gcode-system-note,
+.machinist-ref-panel,
+.categorized-ref,
+.version-info-card {
+  background: linear-gradient(180deg, rgba(255, 220, 199, 0.78), rgba(255, 248, 244, 0.96)) !important;
+  border-color: rgba(169, 65, 0, 0.22) !important;
+  color: var(--text) !important;
 }
 
-.plotLabel:first-child,
-.plotSvg text {
-  letter-spacing: 0;
+.gcode-system-note span,
+.gcode-system-note strong {
+  color: var(--on-primary-container) !important;
 }
 
-.uiux-tab.active,
-.ref-chip.active,
-.primary,
-.job-actions-menu summary,
-.uiux-fab summary {
-  background: var(--primary) !important;
-  color: var(--on-primary) !important;
+.plot-mode-badge {
+  background: var(--primary-container) !important;
+  color: var(--on-primary-container) !important;
 }
 
-.polish-panel {
-  background: linear-gradient(180deg, rgba(168, 216, 255, 0.16), rgba(168, 216, 255, 0.06)) !important;
-  border-color: rgba(168, 216, 255, 0.35) !important;
-}
-
-.rough-sim-note {
-  border-color: rgba(168, 216, 255, 0.4) !important;
-}
-
-/* Replace the old visual legend wording without touching JavaScript-generated paths. */
-.sim-badge::after {
-  content: " Feed lines are blue. Rapid/retract lines are gray.";
+.rough-sim-note,
+.quick-flow-hint {
+  border-color: rgba(169, 65, 0, 0.34) !important;
+  background: rgba(255, 220, 199, 0.36) !important;
 }

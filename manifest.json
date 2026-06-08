@@ -6,8 +6,8 @@
   "start_url": "/CNC-Work-Helper/",
   "scope": "/CNC-Work-Helper/",
   "display": "standalone",
-  "background_color": "#111318",
-  "theme_color": "#a8c7fa",
+  "background_color": "#ffffff",
+  "theme_color": "#a94100",
   "orientation": "portrait-primary",
   "icons": [
     {

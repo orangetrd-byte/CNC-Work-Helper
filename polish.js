@@ -233,12 +233,12 @@
     if ($('appVersionInfo')) return;
     $('handbookView')?.insertAdjacentHTML('beforeend', `
       <div id="appVersionInfo" class="card span-2 version-info-card">
-        <div class="section-head"><h2>Version Info</h2><span class="mini">PWA cache v38</span></div>
+        <div class="section-head"><h2>Version Info</h2><span class="mini">PWA cache v39</span></div>
         <div class="refGrid version-info-grid">
           <p><strong>App</strong><span>CNC Lathe Work Helper</span></p>
-          <p><strong>Version</strong><span>Fast Shop Workflow v1</span></p>
+          <p><strong>Version</strong><span>Orange Material You Theme</span></p>
           <p><strong>Updated</strong><span>June 8, 2026</span></p>
-          <p><strong>Includes</strong><span>Editable G-code editor, simulator plot, Quick Entry, macro snippets, setup notes, tool/feed library, and offline cache.</span></p>
+          <p><strong>Includes</strong><span>White-background Material You orange theme, editable G-code editor, simulator plot, Quick Entry, macro snippets, setup notes, tool/feed library, and offline cache.</span></p>
         </div>
       </div>`);
   }
