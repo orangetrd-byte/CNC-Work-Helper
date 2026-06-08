@@ -55,15 +55,14 @@
     target?.insertAdjacentHTML('beforeend', `
       <div id="geminiAssistantPanel" class="card span-2 ai-panel">
         <div class="section-head"><h2>Machinist Assistant</h2><span class="mini">Gemini API. Uses current job context.</span></div>
-        <div class="ai-key-grid"><div class="field"><label for="geminiApiKey">Gemini API key</label><input id="geminiApiKey" type="password" autocomplete="off" placeholder="Paste key, then tap Save Key"></div><div class="field"><label for="geminiModel">Model</label><select id="geminiModel"><option value="gemini-2.5-flash">gemini-2.5-flash</option><option value="gemini-3-flash-preview">gemini-3-flash-preview</option></select></div></div>
-        <div id="geminiKeyStatus" class="hint ai-key-status">No key saved yet.</div>
+        <div class="ai-compact-key"><span id="geminiKeyStatus" class="ai-key-status">No key saved yet.</span><button id="toggleGeminiKeyBtn" type="button">Key</button><button id="clearGeminiKeyBtn" type="button">Clear</button></div>
+        <div id="geminiKeyEditor" class="ai-key-editor hidden"><div class="ai-key-grid"><div class="field"><label for="geminiApiKey">Gemini API key</label><input id="geminiApiKey" type="password" autocomplete="off" placeholder="Paste key, then tap Save Key"></div><div class="field"><label for="geminiModel">Model</label><select id="geminiModel"><option value="gemini-2.5-flash">gemini-2.5-flash</option><option value="gemini-3-flash-preview">gemini-3-flash-preview</option></select></div></div><button id="saveGeminiKeyBtn" type="button">Save Key</button></div>
         <div class="sample-strip ai-prompts"><button type="button" data-ai-q="What RPM should I run this material at the current stock diameter?">RPM</button><button type="button" data-ai-q="Review this setup for beginner mistakes and safety checks.">Setup Review</button><button type="button" data-ai-q="Check this G-code for obvious lathe safety issues.">G-code Check</button><button type="button" data-ai-q="What should I inspect first on this job?">Inspection</button></div>
         <div class="field"><label for="assistantQuestion">Question</label><textarea id="assistantQuestion" placeholder="Ask about speeds/feeds, setup, inspection, G-code, or tooling."></textarea></div>
-        <div class="row actions"><button id="askGeminiBtn" class="primary" type="button">Ask Assistant</button><button id="saveGeminiKeyBtn" type="button">Save Key</button><button id="clearGeminiKeyBtn" type="button">Clear Key</button></div>
+        <div class="row actions"><button id="askGeminiBtn" class="primary" type="button">Ask Assistant</button></div>
         <div id="assistantAnswer" class="result compact ai-answer">Add a Gemini API key, ask a shop question, and verify all answers before using them at the machine.</div>
       </div>`);
     hydrateKeyFields();
-    $('geminiAssistantPanel').addEventListener('click', handleAssistantClick);
     $('geminiModel')?.addEventListener('change', () => saveKey(false));
   }
 
@@ -105,6 +104,7 @@
   function handleAssistantClick(event) {
     const q = event.target.closest('[data-ai-q]')?.dataset.aiQ;
     if (q && $('assistantQuestion')) $('assistantQuestion').value = q;
+    if (event.target.closest('#toggleGeminiKeyBtn')) $('geminiKeyEditor')?.classList.toggle('hidden');
     if (event.target.closest('#saveGeminiKeyBtn')) saveKey(true);
     if (event.target.closest('#clearGeminiKeyBtn')) clearKey();
     if (event.target.closest('#askGeminiBtn')) askGemini();
@@ -137,7 +137,7 @@
   function wire() {
     injectAssistant();
     document.addEventListener('click', event => {
-      if (event.target.closest('#saveGeminiKeyBtn, #clearGeminiKeyBtn, #askGeminiBtn, [data-ai-q]')) handleAssistantClick(event);
+      if (event.target.closest('#toggleGeminiKeyBtn, #saveGeminiKeyBtn, #clearGeminiKeyBtn, #askGeminiBtn, [data-ai-q]')) handleAssistantClick(event);
     });
     let tries = 0;
     const wait = setInterval(() => { injectAssistant(); if (++tries > 20 || $('geminiAssistantPanel')) clearInterval(wait); }, 300);
