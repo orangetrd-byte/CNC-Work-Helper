@@ -229,11 +229,26 @@
     $('handbookView')?.insertAdjacentHTML('afterbegin', `<div id="categorizedCodeReference" class="card span-2 categorized-ref"><div class="section-head"><h2>G-Code / M-Code Quick List</h2><span class="mini">Grouped for first-time lathe work.</span></div><div class="category-grid">${groups.map(([name, items]) => `<div class="code-category"><h3>${esc(name)}</h3><ul>${items.map(i => `<li>${esc(i)}</li>`).join('')}</ul></div>`).join('')}</div></div>`);
   }
 
+  function injectVersionInfo() {
+    if ($('appVersionInfo')) return;
+    $('handbookView')?.insertAdjacentHTML('beforeend', `
+      <div id="appVersionInfo" class="card span-2 version-info-card">
+        <div class="section-head"><h2>Version Info</h2><span class="mini">PWA cache v38</span></div>
+        <div class="refGrid version-info-grid">
+          <p><strong>App</strong><span>CNC Lathe Work Helper</span></p>
+          <p><strong>Version</strong><span>Fast Shop Workflow v1</span></p>
+          <p><strong>Updated</strong><span>June 8, 2026</span></p>
+          <p><strong>Includes</strong><span>Editable G-code editor, simulator plot, Quick Entry, macro snippets, setup notes, tool/feed library, and offline cache.</span></p>
+        </div>
+      </div>`);
+  }
+
   function wire() {
     injectNotesPolish();
     injectSetupPhoto();
     injectWarningHelp();
     improveReference();
+    injectVersionInfo();
     document.querySelectorAll('input, textarea, select').forEach(el => el.addEventListener('change', () => captureCurrent()));
     setTimeout(() => { const job = currentJob(read()); if (job) fillJob(job); }, 400);
   }
