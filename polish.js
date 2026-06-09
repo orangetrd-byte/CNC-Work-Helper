@@ -5,6 +5,8 @@
   const esc = v => String(v ?? '').replace(/[&<>'"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]));
   const val = id => $(id)?.value?.trim() || '';
   const setVal = (id, value) => { if ($(id)) { $(id).value = value || ''; $(id).dispatchEvent(new Event('input', { bubbles: true })); } };
+  const num = v => { const n = Number(String(v ?? '').trim().replace(/^\./, '0.').replace(/^-\./, '-0.')); return Number.isFinite(n) ? n : null; };
+  const fmt = v => Number.isFinite(v) ? Number(v).toFixed(4).replace(/0+$/, '').replace(/\.$/, '') : '--';
   const read = () => { try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch { return {}; } };
   const currentJob = st => Array.isArray(st.jobs) ? st.jobs.find(j => j.id === st.currentJobId) || st.jobs[0] : null;
   const save = (st, msg = 'Saved local') => {
@@ -218,6 +220,91 @@
     $('simView')?.querySelector('.card')?.insertAdjacentHTML('beforeend', '<p class="hint rough-sim-note">This is a rough preview, not machine simulation. It does not know your holder shape, exact control options, chuck model, or every machine setting.</p>');
   }
 
+  function injectLostZHelper() {
+    if ($('lostZHelperPanel')) return;
+    const panel = `
+      <div id="lostZHelperPanel" class="card span-2 lost-z-helper">
+        <div class="section-head"><h2>Lost Z Face / Retouch Z Helper</h2><span class="mini">Use another known surface when original Z0 is gone.</span></div>
+        <div class="result warn compact">
+          <div class="medium">Do not set a random cut surface to Z0.</div>
+          <div class="hint">Find a face, shoulder, groove wall, stop, gauge, or fixture surface that still exists and has a known print Z location. Touch that surface, then tell the control what Z value that surface should be.</div>
+        </div>
+        <ul class="quick">
+          <li>Pick a surface that still exists and has a known distance from the original Z0.</li>
+          <li>Example: if a shoulder is .750 behind the original face, that touched shoulder is Z-.750.</li>
+          <li>Single block and prove the next move after any work offset or tool offset change.</li>
+        </ul>
+        <div class="row">
+          <div class="field"><label for="lostZSurface">Known surface</label><input id="lostZSurface" placeholder="Shoulder, back face, jaw stop, gauge block"></div>
+          <div class="field"><label for="lostZPrint">Print Z for that surface</label><input id="lostZPrint" inputmode="decimal" placeholder="-.750"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="lostZReadout">Current Z readout when touched</label><input id="lostZReadout" inputmode="decimal" placeholder="-.732"></div>
+          <div class="field"><label for="lostZOffsetNow">Current work offset Z (optional)</label><input id="lostZOffsetNow" inputmode="decimal" placeholder="Optional"></div>
+        </div>
+        <div class="row actions">
+          <button id="lostZCalcBtn" class="primary" type="button">Calculate Z Shift</button>
+          <button id="lostZNoteBtn" type="button">Insert Setup Note</button>
+        </div>
+        <div id="lostZOut" class="result compact">Enter the known surface Z and the current Z readout at touch.</div>
+      </div>`;
+    $('setupView')?.insertAdjacentHTML('beforeend', panel);
+    $('tipsView')?.insertAdjacentHTML('afterbegin', `
+      <div id="lostZTeachingPanel" class="card span-2">
+        <h2>What If The Original Z Face Is Gone?</h2>
+        <ul class="quick">
+          <li>Z zero is a reference, not magic. If the original face is gone, use another known reference.</li>
+          <li>Touch a remaining shoulder, face, stop, gauge, or fixture surface and assign its real print Z value.</li>
+          <li>If the known surface is Z-.750, the control should read Z-.750 at that touch. Do not call it Z0 unless it truly is the programmed zero face.</li>
+        </ul>
+      </div>`);
+    ['lostZSurface','lostZPrint','lostZReadout','lostZOffsetNow'].forEach(id => $(id)?.addEventListener('input', updateLostZ));
+    $('lostZCalcBtn')?.addEventListener('click', updateLostZ);
+    $('lostZNoteBtn')?.addEventListener('click', insertLostZNote);
+  }
+
+  function lostZText() {
+    const surface = val('lostZSurface') || 'known surface';
+    const printZ = num(val('lostZPrint'));
+    const readout = num(val('lostZReadout'));
+    const offsetNow = num(val('lostZOffsetNow'));
+    if (printZ === null || readout === null) return null;
+    const shift = printZ - readout;
+    const nextOffset = offsetNow === null ? null : offsetNow + shift;
+    return { surface, printZ, readout, shift, nextOffset };
+  }
+
+  function updateLostZ() {
+    const out = $('lostZOut');
+    if (!out) return;
+    const data = lostZText();
+    if (!data) {
+      out.className = 'result compact';
+      out.innerHTML = 'Enter the known surface Z and the current Z readout at touch.';
+      return;
+    }
+    out.className = 'result warn compact';
+    out.innerHTML = `
+      <div class="medium">Touched ${esc(data.surface)} should read Z${fmt(data.printZ)}.</div>
+      <div class="hint">Current readout is Z${fmt(data.readout)}, so the needed Z shift is <strong>${fmt(data.shift)}</strong>.</div>
+      ${data.nextOffset === null ? '<div class="hint">If adjusting a work offset, apply that shift using your control/shop procedure.</div>' : `<div class="hint">If current work offset Z is ${fmt(data.nextOffset - data.shift)}, estimated new work offset Z is <strong>${fmt(data.nextOffset)}</strong>.</div>`}
+      <div class="hint">If adjusting a tool offset instead, apply the same idea only to the active tool/offset per shop procedure.</div>`;
+  }
+
+  function insertLostZNote() {
+    updateLostZ();
+    const data = lostZText();
+    if (!data) return;
+    const note = `\nLOST Z FACE / RETOUCH Z\nKnown surface: ${data.surface}\nPrint Z at surface: Z${fmt(data.printZ)}\nControl readout when touched: Z${fmt(data.readout)}\nNeeded Z shift: ${fmt(data.shift)}${data.nextOffset === null ? '' : `\nEstimated new work offset Z: ${fmt(data.nextOffset)}`}\nProve next move in single block with feed override low.\n`;
+    const target = $('setupNotes') || $('setupReference');
+    if (target) {
+      target.value = `${target.value || ''}${note}`;
+      target.dispatchEvent(new Event('input', { bubbles: true }));
+      captureCurrent();
+    }
+    if ($('lostZOut')) $('lostZOut').insertAdjacentHTML('beforeend', '<div class="hint">Setup note inserted.</div>');
+  }
+
   function improveReference() {
     if ($('categorizedCodeReference')) return;
     const groups = [
@@ -233,12 +320,12 @@
     if ($('appVersionInfo')) return;
     $('handbookView')?.insertAdjacentHTML('beforeend', `
       <div id="appVersionInfo" class="card span-2 version-info-card">
-        <div class="section-head"><h2>Version Info</h2><span class="mini">PWA cache v41</span></div>
+        <div class="section-head"><h2>Version Info</h2><span class="mini">PWA cache v42</span></div>
         <div class="refGrid version-info-grid">
           <p><strong>App</strong><span>CNC Lathe Work Helper</span></p>
-          <p><strong>Version</strong><span>Compact Assistant Key</span></p>
+          <p><strong>Version</strong><span>Lost Z Retouch Helper</span></p>
           <p><strong>Updated</strong><span>June 8, 2026</span></p>
-          <p><strong>Includes</strong><span>Compact Assistant key controls, white-background Material You orange theme, editable G-code editor, simulator plot, Quick Entry, macro snippets, setup notes, tool/feed library, and offline cache.</span></p>
+          <p><strong>Includes</strong><span>Lost Z face retouch helper, compact Assistant key controls, white-background Material You orange theme, editable G-code editor, simulator plot, Quick Entry, macro snippets, setup notes, tool/feed library, and offline cache.</span></p>
         </div>
       </div>`);
   }
@@ -247,6 +334,7 @@
     injectNotesPolish();
     injectSetupPhoto();
     injectWarningHelp();
+    injectLostZHelper();
     improveReference();
     injectVersionInfo();
     document.querySelectorAll('input, textarea, select').forEach(el => el.addEventListener('change', () => captureCurrent()));
