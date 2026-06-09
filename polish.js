@@ -232,6 +232,7 @@
         <ul class="quick">
           <li>Pick a surface that still exists and has a known distance from the original Z0.</li>
           <li>Example: if a shoulder is .750 behind the original face, that touched shoulder is Z-.750.</li>
+          <li>If Z0 is the jaw face and the part face is 1.602 from the jaw face, do not blindly call the part face Z0. Touch the part face and enter its true Z distance from the jaw face into the Fanuc Work Shift measurement field. If your machine convention says the part face is Z-1.602, enter -1.602. Verify on Absolute Position before cutting.</li>
           <li>Single block and prove the next move after any work offset or tool offset change.</li>
         </ul>
         <div class="row">
@@ -255,6 +256,7 @@
         <ul class="quick">
           <li>Z zero is a reference, not magic. If the original face is gone, use another known reference.</li>
           <li>Touch a remaining shoulder, face, stop, gauge, or fixture surface and assign its real print Z value.</li>
+          <li>If Z0 is the jaw face and the part face is 1.602 from the jaw face, do not blindly call the part face Z0. Touch the part face and enter its true Z distance from the jaw face into the Fanuc Work Shift measurement field. If your machine convention says the part face is Z-1.602, enter -1.602. Verify on Absolute Position before cutting.</li>
           <li>If the known surface is Z-.750, the control should read Z-.750 at that touch. Do not call it Z0 unless it truly is the programmed zero face.</li>
         </ul>
       </div>`);

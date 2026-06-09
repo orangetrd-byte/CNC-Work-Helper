@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cnc-lathe-work-helper-v42-lost-z-helper';
+const CACHE_NAME = 'cnc-lathe-work-helper-v43-fanuc-z-shift-note';
 const ASSETS = [
   './',
   './index.html',
