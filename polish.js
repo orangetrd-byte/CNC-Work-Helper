@@ -16,6 +16,7 @@
     if ($('saveStatus')) $('saveStatus').textContent = msg;
   };
   const gcodeText = () => $('gcodeEditor')?.value || $('gcodeOut')?.textContent || '';
+  const markUnsaved = () => { if ($('saveStatus')) $('saveStatus').textContent = 'Unsaved changes'; };
 
   const samples = [
     {
@@ -106,7 +107,7 @@
     if (!field) return;
     field.value = [field.value.trim(), text.trim()].filter(Boolean).join('\n\n');
     field.dispatchEvent(new Event('input', { bubbles: true }));
-    captureCurrent();
+    markUnsaved();
   }
 
   function jobCardText(job) {
@@ -206,10 +207,10 @@
       if (!file) return;
       if (file.size > 1600000) { alert('Photo is too large for local storage. Use a smaller picture or write a note.'); return; }
       const reader = new FileReader();
-      reader.onload = () => { $('setupPhotoPreview').src = reader.result; $('setupPhotoPreview').classList.remove('hidden'); setVal('setupPhotoName', file.name); captureCurrent(); };
+      reader.onload = () => { $('setupPhotoPreview').src = reader.result; $('setupPhotoPreview').classList.remove('hidden'); setVal('setupPhotoName', file.name); markUnsaved(); };
       reader.readAsDataURL(file);
     });
-    $('setupPhotoName').addEventListener('input', () => captureCurrent());
+    $('setupPhotoName').addEventListener('input', markUnsaved);
     const data = currentJob(read())?.setup?.setupPhotoData;
     if (data) { $('setupPhotoPreview').src = data; $('setupPhotoPreview').classList.remove('hidden'); }
   }
@@ -302,7 +303,7 @@
     if (target) {
       target.value = `${target.value || ''}${note}`;
       target.dispatchEvent(new Event('input', { bubbles: true }));
-      captureCurrent();
+      markUnsaved();
     }
     if ($('lostZOut')) $('lostZOut').insertAdjacentHTML('beforeend', '<div class="hint">Setup note inserted.</div>');
   }
@@ -322,12 +323,12 @@
     if ($('appVersionInfo')) return;
     $('handbookView')?.insertAdjacentHTML('beforeend', `
       <div id="appVersionInfo" class="card span-2 version-info-card">
-        <div class="section-head"><h2>Version Info</h2><span class="mini">PWA cache v51</span></div>
+        <div class="section-head"><h2>Version Info</h2><span class="mini">PWA cache v53</span></div>
         <div class="refGrid version-info-grid">
           <p><strong>App</strong><span>CNC Lathe Work Helper</span></p>
-          <p><strong>Version</strong><span>No Startup Save</span></p>
+          <p><strong>Version</strong><span>No Refresh Save</span></p>
           <p><strong>Updated</strong><span>June 10, 2026</span></p>
-          <p><strong>Includes</strong><span>No startup save, Manual Save mode, full-screen mobile Recent Jobs drawer, stronger modal overlay, blank job cleanup, single-row mobile tabs, dedicated Machinist Assistant tab, improved navigation, searchable references, common shop problem references, expanded G-code validation, saved-job filtering, Lost Z face retouch helper, editable G-code editor, simulator plot, Quick Entry, macro snippets, setup notes, tool/feed library, and offline cache.</span></p>
+          <p><strong>Includes</strong><span>No refresh save, no startup save, Manual Save mode, full-screen mobile Recent Jobs drawer, stronger modal overlay, blank job cleanup, single-row mobile tabs, dedicated Machinist Assistant tab, improved navigation, searchable references, common shop problem references, expanded G-code validation, saved-job filtering, Lost Z face retouch helper, editable G-code editor, simulator plot, Quick Entry, macro snippets, setup notes, tool/feed library, and offline cache.</span></p>
         </div>
       </div>`);
   }
@@ -339,7 +340,6 @@
     injectLostZHelper();
     improveReference();
     injectVersionInfo();
-    document.querySelectorAll('input, textarea, select').forEach(el => el.addEventListener('change', () => captureCurrent()));
     setTimeout(() => { const job = currentJob(read()); if (job) fillJob(job); }, 400);
   }
 

@@ -140,7 +140,11 @@
     job.machine = $('machine').value.trim();
     job.toolNotes = $('toolNotes').value.trim();
     job.setupNotes = $('setupNotes').value.trim();
-    job.setup = { workOffset: $('workOffset').value.trim(), stockDiameter: $('stockDiameter').value.trim(), stockLength: $('stockLength').value.trim(), chuckJaw: $('chuckJaw').value.trim(), stickout: $('stickout').value.trim(), coolant: $('coolant').value.trim(), inspectionNotes: $('inspectionNotes').value.trim(), setupReference: $('setupReference').value.trim() };
+    job.setup = {
+      workOffset: $('workOffset').value.trim(), stockDiameter: $('stockDiameter').value.trim(), stockLength: $('stockLength').value.trim(), chuckJaw: $('chuckJaw').value.trim(), stickout: $('stickout').value.trim(), coolant: $('coolant').value.trim(), inspectionNotes: $('inspectionNotes').value.trim(), setupReference: $('setupReference').value.trim(),
+      pieJawNotes: $('pieJawNotes')?.value.trim() || '', pieJawSize: $('pieJawSize')?.value.trim() || '', pieJawBore: $('pieJawBore')?.value.trim() || '', pieJawStep: $('pieJawStep')?.value.trim() || '',
+      setupPhotoName: $('setupPhotoName')?.value.trim() || '', setupPhotoData: $('setupPhotoPreview')?.src?.startsWith('data:') ? $('setupPhotoPreview').src : (job.setup?.setupPhotoData || '')
+    };
     job.calculator = { mode: document.querySelector('.seg.active')?.dataset.mode || 'od', touchDia: $('touchDia').value.trim(), targetDia: $('targetDia').value.trim(), faceZ: $('faceZ').value.trim(), plungeDepth: $('plungeDepth').value.trim(), zDirection: $('zDirection').value };
     job.tool = { label: $('toolLabel').value.trim(), width: $('insertWidth').value.trim(), radius: $('insertRadius').value.trim(), notes: $('customToolNotes').value.trim() };
     job.feed = { label: $('feedLabel').value.trim(), speed: $('gSpeed').value.trim(), feed: $('gFeed').value.trim() };

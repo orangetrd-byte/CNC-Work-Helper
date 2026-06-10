@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cnc-lathe-work-helper-v51-no-startup-save';
+const CACHE_NAME = 'cnc-lathe-work-helper-v53-no-refresh-save';
 const ASSETS = [
   './',
   './index.html',
