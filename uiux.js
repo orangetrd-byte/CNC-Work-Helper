@@ -42,6 +42,7 @@
     referenceViews.forEach(([id]) => $(id)?.classList.add('hidden'));
     $(viewId)?.classList.remove('hidden');
     document.querySelectorAll('.ref-chip').forEach(btn => btn.classList.toggle('active', btn.dataset.refView === viewId));
+    applyReferenceFilter($('referenceSearchInput')?.value || '');
   }
 
   function buildTabs() {
@@ -56,16 +57,33 @@
     const ref = document.createElement('section');
     ref.id = 'referenceHubView';
     ref.className = 'view grid hidden';
-    ref.innerHTML = `<div class="card span-2 reference-hub"><div class="section-head"><h2>References</h2><span class="mini">Calculators, charts, symbols, tips, and saved data.</span></div><div class="ref-chips">${referenceViews.map(([id, label], i) => `<button class="ref-chip ${i === 0 ? 'active' : ''}" data-ref-view="${id}" type="button">${label}</button>`).join('')}</div></div>`;
+    ref.innerHTML = `<div class="card span-2 reference-hub"><div class="section-head"><h2>References</h2><span class="mini">Searchable quick references, calculators, symbols, tips, and saved data.</span></div><div class="field reference-search"><label for="referenceSearchInput">Search / filter current reference</label><input id="referenceSearchInput" placeholder="Search Z0, G71, work shift, tap drill, thread, jaws"></div><div class="ref-chips">${referenceViews.map(([id, label], i) => `<button class="ref-chip ${i === 0 ? 'active' : ''}" data-ref-view="${id}" type="button">${label}</button>`).join('')}</div><div class="ref-quick-jumps"><button data-ref-view="handbookView" type="button">Codes</button><button data-ref-view="tipsView" type="button">Setup Tips</button><button data-ref-view="symbolsView" type="button">Symbols</button><button data-ref-view="savedView" type="button">Saved Jobs</button></div></div>`;
     document.querySelector('main')?.appendChild(ref);
     $('uiuxTabs').addEventListener('click', e => { const b = e.target.closest('.uiux-tab'); if (b) showOnly(b.dataset.view); });
-    ref.addEventListener('click', e => { const b = e.target.closest('.ref-chip'); if (b) showReference(b.dataset.refView); });
+    ref.addEventListener('click', e => { const b = e.target.closest('.ref-chip,[data-ref-view]'); if (b) showReference(b.dataset.refView); });
+    $('referenceSearchInput')?.addEventListener('input', e => applyReferenceFilter(e.target.value));
     document.querySelectorAll('.footer-nav .nav').forEach(btn => btn.addEventListener('click', () => {
       const id = btn.dataset.view;
       if (referenceViews.some(([v]) => v === id)) { showOnly('referenceHubView'); showReference(id); }
       else showOnly(id);
     }));
     showOnly('notesView');
+  }
+
+  function activeReferenceSection() {
+    return referenceViews.map(([id]) => $(id)).find(section => section && !section.classList.contains('hidden'));
+  }
+
+  function applyReferenceFilter(raw) {
+    const section = activeReferenceSection();
+    if (!section) return;
+    const term = String(raw || '').toLowerCase().trim();
+    const targets = section.querySelectorAll('.card, .item, .code-row, .code-category, .tap-table, .mini-calc, .refGrid p');
+    targets.forEach(el => {
+      const match = !term || el.textContent.toLowerCase().includes(term);
+      el.classList.toggle('filtered-out', !match);
+    });
+    if ($('referenceFilterStatus')) $('referenceFilterStatus').textContent = term ? `Filtering: ${raw}` : 'Showing all reference items';
   }
 
   function makeJobActions() {
@@ -122,7 +140,11 @@
       const html = list.map(j => `<button type="button" class="item search-job" data-job-id="${esc(j.id)}"><strong>${esc(j.partNumber || 'Untitled job')}</strong><span>${esc([j.material, j.machine, j.operation].filter(Boolean).join(' | '))}</span></button>`).join('') || '<p class="hint">No matching jobs.</p>';
       if ($('jobSearchResults')) $('jobSearchResults').innerHTML = html;
     };
-    ['jobSearchInput','jobSearchInputNotes'].forEach(id => $(id)?.addEventListener('input', e => render(e.target.value)));
+    function filterExistingLists(q) {
+      const term = String(q || '').toLowerCase().trim();
+      ['jobsList','setupJobsList','recentJobsList'].forEach(id => $(id)?.querySelectorAll('.item').forEach(item => item.classList.toggle('filtered-out', !!term && !item.textContent.toLowerCase().includes(term))));
+    }
+    ['jobSearchInput','jobSearchInputNotes'].forEach(id => $(id)?.addEventListener('input', e => { render(e.target.value); filterExistingLists(e.target.value); }));
     $('jobSearchResults')?.addEventListener('click', e => {
       const id = e.target.closest('[data-job-id]')?.dataset.jobId;
       if (!id) return;
@@ -157,6 +179,16 @@
         </div>
       </div>
       <div class="card span-2 tap-chart-panel"><div class="section-head"><h2>Common Tap Drill Quick Chart</h2><span class="mini">Verify with shop chart before cutting.</span></div><div class="tap-grid">${tapTables()}</div></div>`);
+    $('handbookView')?.insertAdjacentHTML('afterbegin', `
+      <div id="shopProblemRefs" class="card span-2 machinist-ref-panel">
+        <div class="section-head"><h2>Common Shop Problem References</h2><span id="referenceFilterStatus" class="mini">Showing all reference items</span></div>
+        <div class="category-grid">
+          <div class="code-category"><h3>Lost Z / Retouch Z</h3><ul><li>If original Z0 is gone, use another known surface.</li><li>If Z0 is jaw face and part face is 1.602 from jaw face, do not blindly call part face Z0.</li><li>Touch the known surface and enter its true Z value in Work Shift / measurement, then verify Absolute Position.</li></ul></div>
+          <div class="code-category"><h3>Fanuc Work Shift</h3><ul><li>Call active tool and offset first, such as T0101.</li><li>Use OFFSET/SETTING -> WORK SHIFT / EXT, screen names vary.</li><li>Measurement Z should receive the value the touched surface should read.</li><li>Work Shift affects all tools, so prove the next move.</li></ul></div>
+          <div class="code-category"><h3>Tool Offset Checks</h3><ul><li>Confirm station and offset pair, such as T0101.</li><li>Separate geometry correction from small wear changes.</li><li>Do not fix a global Z problem by changing one tool unless only that tool is wrong.</li></ul></div>
+          <div class="code-category"><h3>First Article Checks</h3><ul><li>Check OD, length from datum, groove width, chamfer, and surface finish.</li><li>Compare measured part to program datum before changing offsets.</li><li>Record what surface was touched and what offset was changed.</li></ul></div>
+        </div>
+      </div>`);
     document.querySelectorAll('#expandedMachinistRefs input').forEach(i => i.addEventListener('input', updateCalcs));
     updateCalcs();
   }
@@ -235,20 +267,34 @@
   function runAdvancedSafety() {
     const src = codeText().toUpperCase();
     const warnings = [];
+    const lines = src.split(/\r?\n/);
     if (!/\bG20\b|\bG21\b/.test(src)) warnings.push('Missing G20/G21 unit mode.');
+    if (!/\bG18\b/.test(src)) warnings.push('Missing G18 XZ plane selection for lathe work.');
     if (!/\bG40\b/.test(src)) warnings.push('Missing G40 tool nose compensation cancel.');
     if (!/\bG80\b/.test(src)) warnings.push('Missing G80 canned cycle cancel.');
     if (!/\bG90\b/.test(src)) warnings.push('Missing G90 absolute/cycle safety mode. Verify System A intent.');
+    if (!/\bG54\b|\bG55\b|\bG56\b|\bG57\b|\bG58\b|\bG59\b/.test(src)) warnings.push('Missing visible work offset G54-G59.');
+    if (!/\bG98\b|\bG99\b/.test(src)) warnings.push('Missing feed mode G98/G99. Many lathes use G99 feed/rev for turning.');
     if (!/\bM0?3\b|\bM0?4\b/.test(src)) warnings.push('Missing spindle command M03/M04.');
     if (!/\bM0?9\b/.test(src)) warnings.push('Missing coolant off M09.');
     if (!/\bM30\b|\bM02\b/.test(src)) warnings.push('Missing program end M30/M02.');
+    if (/\bG96\b/.test(src) && !/\bG50\b/.test(src)) warnings.push('G96 CSS used without visible G50 spindle speed clamp.');
+    if (/\bG41\b|\bG42\b/.test(src) && !/\bG40\b/.test(src)) warnings.push('Tool nose compensation used without visible G40 cancel.');
     (src.match(/\bT\s*\d+/g) || []).forEach(t => { const digits = t.replace(/\D/g, ''); if (digits.length < 4 || digits.endsWith('00')) warnings.push(`Tool change without clear offset: ${t}.`); });
     const stock = num($('stockDiameter')?.value), face = num($('faceZ')?.value) ?? 0;
-    src.split(/\r?\n/).forEach((line, i) => {
-      if (!/\bG0?0\b/.test(line)) return;
+    let feedActive = /\bF\s*-?\d*\.?\d+/.test(src.split(/\bG0?1\b/)[0] || '');
+    lines.forEach((line, i) => {
+      const clean = line.replace(/\([^)]*\)/g, '').trim();
+      if (/\bF\s*-?\d*\.?\d+/i.test(clean)) feedActive = true;
+      if (/\bG0?1\b/.test(clean) && !feedActive) warnings.push(`Line ${i + 1}: G01 feed move before feed rate F.`);
+      if (/\bG0?[23]\b/.test(clean) && !/\bR\s*-?\d*\.?\d+|\bI\s*-?\d*\.?\d+|\bK\s*-?\d*\.?\d+/.test(clean)) warnings.push(`Line ${i + 1}: arc move missing R/I/K.`);
       const x = /X\s*(-?\d*\.?\d+)/.exec(line)?.[1], z = /Z\s*(-?\d*\.?\d+)/.exec(line)?.[1];
       const xv = num(x), zv = num(z);
+      if (xv !== null && xv < 0) warnings.push(`Line ${i + 1}: X below zero. Lathe X is diameter based.`);
+      if (/\bG0?1\b/.test(clean) && zv !== null && zv > face) warnings.push(`Line ${i + 1}: positive Z feed/plunge. Verify Z direction from face.`);
+      if (!/\bG0?0\b/.test(clean)) return;
       if (stock && xv !== null && zv !== null && xv <= stock + .02 && zv <= face + .05) warnings.push(`Line ${i + 1}: rapid move into/near stock envelope.`);
+      if (zv !== null && zv < face && (xv === null || (stock && xv <= stock + .1))) warnings.push(`Line ${i + 1}: rapid enters negative Z near stock or jaws.`);
     });
     if ($('advancedSafetyWarnings')) $('advancedSafetyWarnings').innerHTML = warnings.length ? warnings.map(w => `<div>${esc(w)}</div>`).join('') : '<span class="okText">No added safety warnings found. Still verify at the machine.</span>';
   }
