@@ -49,10 +49,17 @@
   function addPieJaws() {
     if (!$('pieJawNotes')) $('notesView')?.querySelector('.card')?.insertAdjacentHTML('beforeend', '<div class="row cnc-enhanced-row"><div class="field"><label for="pieJawNotes">Pie jaw notes</label><textarea id="pieJawNotes" placeholder="Pie jaws, bore/step, jaw pressure, soft jaw sketch notes"></textarea></div></div>');
     if (!$('pieJawSize')) $('chuckJaw')?.closest('.row')?.insertAdjacentHTML('afterend', '<div class="row cnc-enhanced-row"><div class="field"><label for="pieJawSize">Pie jaw OD / size</label><input id="pieJawSize" inputmode="decimal" placeholder="jaw size or chuck size"></div><div class="field"><label for="pieJawBore">Pie jaw bore / pocket</label><input id="pieJawBore" inputmode="decimal" placeholder="bore or pocket diameter"></div><div class="field"><label for="pieJawStep">Pie jaw step / grip</label><input id="pieJawStep" placeholder="step depth, grip land, pressure"></div></div>');
-    ['pieJawNotes','pieJawSize','pieJawBore','pieJawStep'].forEach(id => $(id)?.addEventListener('input', () => { captureJaws(true); scheduleParse(); }));
+    ['pieJawNotes','pieJawSize','pieJawBore','pieJawStep'].forEach(id => $(id)?.addEventListener('input', () => { captureJaws(false); scheduleParse(); }));
   }
   function fillJaws() { const s = job()?.setup || {}; ['pieJawNotes','pieJawSize','pieJawBore','pieJawStep'].forEach(id => { if ($(id)) $(id).value = s[id] || ''; }); }
-  function captureJaws(persist) { if (!$('pieJawNotes')) return; edit(j => { ['pieJawNotes','pieJawSize','pieJawBore','pieJawStep'].forEach(id => { j.setup[id] = $(id)?.value.trim() || ''; }); }, persist ? 'Saved pie jaws' : 'Saved local'); }
+  function captureJaws(persist) {
+    if (!$('pieJawNotes')) return;
+    if (!persist) {
+      if ($('saveStatus')) $('saveStatus').textContent = 'Unsaved changes';
+      return;
+    }
+    edit(j => { ['pieJawNotes','pieJawSize','pieJawBore','pieJawStep'].forEach(id => { j.setup[id] = $(id)?.value.trim() || ''; }); }, 'Saved pie jaws');
+  }
 
   function injectReference() {
     if ($('systemAReferencePanel')) return;
@@ -83,17 +90,17 @@
         <div class="result editor-plot-panel"><div class="section-head"><h2>Plot Preview</h2><span class="mini" id="editorPlotStatus">Reads typed G-code</span></div><div class="plotWrap"><svg id="editorPlot" class="plotSvg tall" viewBox="0 0 700 340" role="img" aria-label="Typed G-code plot preview"></svg></div></div>
       </div>`);
     setCode(source.includes('Enter calculator values') ? '' : source, false);
-    editor()?.addEventListener('input', () => { syncEditor(true); scheduleParse(); });
+    editor()?.addEventListener('input', () => { syncEditor(false); scheduleParse(); });
     $('genCalcBtn')?.addEventListener('click', generateFromCalculator);
     $('checkCodeBtn')?.addEventListener('click', runCheckAndPlot);
     $('simulateCodeBtn')?.addEventListener('click', () => { runCheckAndPlot(); document.querySelector('[data-view="simView"]')?.click(); });
     $('plotCodeBtn')?.addEventListener('click', () => { runCheckAndPlot(); $('editorPlot')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); });
     $('copyEditorBtn')?.addEventListener('click', copyCode);
-    $('clearEditorBtn')?.addEventListener('click', () => { setCode('', true, 'Cleared G-code'); runCheckAndPlot(); });
+    $('clearEditorBtn')?.addEventListener('click', () => { setCode('', false); runCheckAndPlot(); });
     $('saveCodeBtn')?.addEventListener('click', () => { syncEditor(true, 'Saved G-code'); runCheckAndPlot(); });
     ['gTool','gRapidX','gRapidZ','gComment','gSpeed','gFeed','workOffset','stockDiameter','stockLength','stickout','faceZ','zDirection'].forEach(id => { $(id)?.addEventListener('input', scheduleParse); $(id)?.addEventListener('change', scheduleParse); });
   }
-  function syncEditor(persist, msg = 'Auto-saved code') { const text = codeText(); if ($('gcodeOut')) $('gcodeOut').textContent = text || 'Enter or generate G-code.'; if (persist) edit(j => { j.gcode.output = text; }, msg); }
+  function syncEditor(persist, msg = 'Saved G-code') { const text = codeText(); if ($('gcodeOut')) $('gcodeOut').textContent = text || 'Enter or generate G-code.'; if (persist) edit(j => { j.gcode.output = text; }, msg); }
   function generateFromCalculator() {
     const j = job() || {}, target = num($('targetDia')?.value), touch = num($('touchDia')?.value), face = num($('faceZ')?.value) ?? 0, depth = num($('plungeDepth')?.value) ?? 0;
     if (!Number.isFinite(target) || !Number.isFinite(touch)) { alert('Enter calculator touch-off X and target diameter first.'); return; }
@@ -106,7 +113,7 @@
     if ($('gTool')?.value.trim()) lines.push($('gTool').value.trim());
     if ($('gSpeed')?.value.trim()) lines.push($('gSpeed').value.trim());
     lines.push(`G00 X${fmt(safeX)} Z${fmt(safeZ)}`, `G01 Z${fmt(zTarget)} F${feed}`, `G01 X${fmt(target)} F${feed}`, `G00 X${fmt(safeX)}`, `G00 Z${fmt(safeZ)}`, '(VERIFY TOOL, OFFSETS, JAWS, STOCK, AND Z DIRECTION)', '%');
-    setCode(lines.join('\n'), true, 'Generated from calculator'); runCheckAndPlot();
+    setCode(lines.join('\n'), false); runCheckAndPlot();
   }
   async function copyCode() { try { await navigator.clipboard.writeText(codeText()); if ($('saveStatus')) $('saveStatus').textContent = 'Copied'; } catch { alert('Copy failed. Long press and copy from the code box.'); } }
 

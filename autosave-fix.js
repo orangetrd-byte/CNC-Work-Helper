@@ -92,17 +92,6 @@
     if (patched || window.__cncDelayedAutosaveStoragePatch) return;
     patched = true;
     window.__cncDelayedAutosaveStoragePatch = true;
-    const originalSetItem = Storage.prototype.setItem;
-    Storage.prototype.setItem = function(key, value) {
-      if (this === localStorage && key === storeKey && Date.now() > allowImmediateUntil) {
-        if (suppressUntilEdit) return undefined;
-        scheduleWrite(String(value));
-        return undefined;
-      }
-      const result = originalSetItem.apply(this, arguments);
-      if (this === localStorage && (key === storeKey || assistantKeys.has(key))) markSaved(key === storeKey ? 'Saved' : 'Saved setting');
-      return result;
-    };
   }
 
   function showClearedState() {
@@ -154,7 +143,7 @@
     document.addEventListener('input', resumeAfterEdit, true);
     document.addEventListener('change', resumeAfterEdit, true);
     ['newJobBtn','saveJobBtn','duplicateJobBtn','loadJobBtn','saveCodeBtn'].forEach(id => $(id)?.addEventListener('click', () => setTimeout(pruneBlankUntitledJobs, 250)));
-    setTimeout(() => { showClearedState(); pruneBlankUntitledJobs(); }, 800);
+    setTimeout(showClearedState, 800);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire); else wire();
