@@ -329,3 +329,40 @@ code {
 .uiux-tab {
   flex: 0 0 auto !important;
 }
+
+body.drawer-open {
+  overflow: hidden !important;
+}
+
+body.drawer-open .uiux-fab {
+  display: none !important;
+}
+
+.scrim {
+  z-index: 110 !important;
+  background: rgba(36, 26, 20, 0.56) !important;
+  backdrop-filter: blur(2px);
+}
+
+.drawer {
+  z-index: 120 !important;
+}
+
+@media (max-width: 720px) {
+  .drawer {
+    inset: 0 !important;
+    width: 100vw !important;
+    max-width: none !important;
+    border-left: 0 !important;
+    border-radius: 0 !important;
+    padding: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)) !important;
+  }
+
+  .drawer-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--surface1);
+    padding-bottom: 10px;
+  }
+}

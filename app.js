@@ -300,7 +300,19 @@
     document.querySelectorAll('.nav').forEach(button => button.classList.toggle('active', button.dataset.view === id));
     render();
   }
-  function closeDrawer() { $('recentDrawer').classList.add('hidden'); $('drawerScrim').classList.add('hidden'); }
+  function openDrawer() {
+    renderJobs();
+    $('recentDrawer').classList.remove('hidden');
+    $('drawerScrim').classList.remove('hidden');
+    document.body.classList.add('drawer-open');
+    $('recentDrawer').setAttribute('aria-modal', 'true');
+  }
+  function closeDrawer() {
+    $('recentDrawer').classList.add('hidden');
+    $('drawerScrim').classList.add('hidden');
+    document.body.classList.remove('drawer-open');
+    $('recentDrawer').removeAttribute('aria-modal');
+  }
   function downloadJson(filename, data) {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const anchor = document.createElement('a');
@@ -345,13 +357,13 @@
 
   document.querySelectorAll('.nav').forEach(button => button.addEventListener('click', () => showView(button.dataset.view)));
   document.querySelectorAll('.seg').forEach(button => button.addEventListener('click', () => setMode(button.dataset.mode)));
-  $('recentToggle').addEventListener('click', () => { renderJobs(); $('recentDrawer').classList.remove('hidden'); $('drawerScrim').classList.remove('hidden'); });
+  $('recentToggle').addEventListener('click', openDrawer);
   $('closeDrawer').addEventListener('click', closeDrawer); $('drawerScrim').addEventListener('click', closeDrawer);
   $('newJobBtn').addEventListener('click', () => { updateFromFields(); const job = blankJob(); state.jobs.unshift(job); state.currentJobId = job.id; state.recentJobIds = uniqueIds([job.id, ...state.recentJobIds], state.jobs); fillFields(job); persist('New job'); render(); });
   $('saveJobBtn').addEventListener('click', () => autosave());
   $('saveSetupBtn').addEventListener('click', () => autosave());
   $('duplicateJobBtn').addEventListener('click', () => window.duplicateJob(state.currentJobId));
-  $('loadJobBtn').addEventListener('click', () => { $('recentDrawer').classList.remove('hidden'); $('drawerScrim').classList.remove('hidden'); });
+  $('loadJobBtn').addEventListener('click', openDrawer);
   $('setupNewJobBtn').addEventListener('click', () => $('newJobBtn').click());
   $('setupLoadJobBtn').addEventListener('click', () => $('loadJobBtn').click());
   $('loadLatheExampleBtn').addEventListener('click', () => { $('touchDia').value = '24.000'; $('targetDia').value = '3.000'; $('faceZ').value = '0.000'; $('plungeDepth').value = '.500'; $('zDirection').value = 'minus'; $('toolLabel').value = 'DB .187 x .015'; $('insertWidth').value = '.187'; $('insertRadius').value = '.015'; calculateMove(true); });
