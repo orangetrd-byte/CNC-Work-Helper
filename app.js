@@ -176,13 +176,20 @@
   }
   function setMode(mode, shouldSave = true) {
     document.querySelectorAll('.seg').forEach(button => button.classList.toggle('active', button.dataset.mode === mode));
-    if (shouldSave) autosave();
+    if (shouldSave) markUnsaved();
   }
-  function autosave() {
+  function markUnsaved() {
     updateFromFields();
     buildGcode(false);
     updateFromFields();
-    persist('Auto-saved');
+    updateJobLabel();
+    touchStatus('Unsaved changes');
+  }
+  function saveCurrentJob(status = 'Saved job') {
+    updateFromFields();
+    buildGcode(false);
+    updateFromFields();
+    persist(status);
     render();
   }
   function calculateMove(saveAfter = true) {
@@ -200,7 +207,7 @@
     job.lastMove = move;
     $('manualResult').innerHTML = `<div class="mini">Move to</div><div class="big">X${fmt(target)} &nbsp; Z${fmt(zTarget)}</div><div class="medium">Radial travel: ${fmt(radialTravel)}</div><div class="hint">Diameter change: ${fmt(diaChange)}.${tool ? ` Tool: ${escapeHtml(tool)}` : ''}</div>`;
     buildGcode(false);
-    if (saveAfter) autosave();
+    if (saveAfter) markUnsaved();
     return move;
   }
   function buildGcode(saveToJob = true) {
@@ -347,12 +354,12 @@
   window.useTool = id => {
     const tool = String(id).startsWith('p') ? premadeTools[Number(String(id).slice(1))] : state.tools.find(item => item.id === id);
     if (!tool) return;
-    $('toolLabel').value = tool.label || ''; $('insertWidth').value = tool.width || ''; $('insertRadius').value = tool.radius || ''; $('customToolNotes').value = tool.notes || ''; autosave();
+    $('toolLabel').value = tool.label || ''; $('insertWidth').value = tool.width || ''; $('insertRadius').value = tool.radius || ''; $('customToolNotes').value = tool.notes || ''; markUnsaved();
   };
   window.useFeed = id => {
     const feed = String(id).startsWith('f') ? premadeFeeds[Number(String(id).slice(1))] : state.feeds.find(item => item.id === id);
     if (!feed) return;
-    $('feedLabel').value = feed.label || ''; $('gSpeed').value = feed.speed || ''; $('gFeed').value = feed.feed || ''; autosave();
+    $('feedLabel').value = feed.label || ''; $('gSpeed').value = feed.speed || ''; $('gFeed').value = feed.feed || ''; markUnsaved();
   };
 
   document.querySelectorAll('.nav').forEach(button => button.addEventListener('click', () => showView(button.dataset.view)));
@@ -360,24 +367,24 @@
   $('recentToggle').addEventListener('click', openDrawer);
   $('closeDrawer').addEventListener('click', closeDrawer); $('drawerScrim').addEventListener('click', closeDrawer);
   $('newJobBtn').addEventListener('click', () => { updateFromFields(); const job = blankJob(); state.jobs.unshift(job); state.currentJobId = job.id; state.recentJobIds = uniqueIds([job.id, ...state.recentJobIds], state.jobs); fillFields(job); persist('New job'); render(); });
-  $('saveJobBtn').addEventListener('click', () => autosave());
-  $('saveSetupBtn').addEventListener('click', () => autosave());
+  $('saveJobBtn').addEventListener('click', () => saveCurrentJob());
+  $('saveSetupBtn').addEventListener('click', () => saveCurrentJob('Saved setup'));
   $('duplicateJobBtn').addEventListener('click', () => window.duplicateJob(state.currentJobId));
   $('loadJobBtn').addEventListener('click', openDrawer);
   $('setupNewJobBtn').addEventListener('click', () => $('newJobBtn').click());
   $('setupLoadJobBtn').addEventListener('click', () => $('loadJobBtn').click());
   $('loadLatheExampleBtn').addEventListener('click', () => { $('touchDia').value = '24.000'; $('targetDia').value = '3.000'; $('faceZ').value = '0.000'; $('plungeDepth').value = '.500'; $('zDirection').value = 'minus'; $('toolLabel').value = 'DB .187 x .015'; $('insertWidth').value = '.187'; $('insertRadius').value = '.015'; calculateMove(true); });
   ['partNumber','material','operation','machine','toolNotes','setupNotes','workOffset','stockDiameter','stockLength','chuckJaw','stickout','coolant','inspectionNotes','setupReference','touchDia','targetDia','faceZ','plungeDepth','zDirection','insertWidth','insertRadius','customToolNotes','gTool','gRapidX','gRapidZ','gComment','gSpeed','gFeed','feedLabel'].forEach(id => {
-    $(id).addEventListener('input', () => { if (['touchDia','targetDia','faceZ','plungeDepth','zDirection'].includes(id)) calculateMove(false); autosave(); });
+    $(id).addEventListener('input', () => { if (['touchDia','targetDia','faceZ','plungeDepth','zDirection'].includes(id)) calculateMove(false); markUnsaved(); });
   });
-  $('toolLabel').addEventListener('input', () => { const parsed = parseToolLabel($('toolLabel').value); if (parsed) { $('insertWidth').value = parsed.width; $('insertRadius').value = parsed.radius; } autosave(); });
+  $('toolLabel').addEventListener('input', () => { const parsed = parseToolLabel($('toolLabel').value); if (parsed) { $('insertWidth').value = parsed.width; $('insertRadius').value = parsed.radius; } markUnsaved(); });
   ['premadeTool','activeToolSelect','gcodeToolSelect'].forEach(id => {
     $(id).addEventListener('change', event => { if (event.target.value !== '') window.useTool(event.target.value); });
   });
   $('premadeFeed').addEventListener('change', event => { if (event.target.value !== '') window.useFeed(`f${event.target.value}`); });
-  $('saveToolBtn').addEventListener('click', () => { const tool = { id: crypto.randomUUID(), date: new Date().toLocaleString(), label: $('toolLabel').value.trim(), width: $('insertWidth').value.trim(), radius: $('insertRadius').value.trim(), notes: $('customToolNotes').value.trim() }; if (!tool.label && !tool.width && !tool.radius && !tool.notes) return; state.tools.unshift(tool); autosave(); });
-  $('saveFeedBtn').addEventListener('click', () => { state.feeds.unshift({ id: crypto.randomUUID(), date: new Date().toLocaleString(), label: $('feedLabel').value.trim() || 'Custom speed/feed', speed: $('gSpeed').value.trim(), feed: $('gFeed').value.trim() }); autosave(); });
-  $('refreshGcodeBtn').addEventListener('click', () => { calculateMove(false); autosave(); });
+  $('saveToolBtn').addEventListener('click', () => { const tool = { id: crypto.randomUUID(), date: new Date().toLocaleString(), label: $('toolLabel').value.trim(), width: $('insertWidth').value.trim(), radius: $('insertRadius').value.trim(), notes: $('customToolNotes').value.trim() }; if (!tool.label && !tool.width && !tool.radius && !tool.notes) return; state.tools.unshift(tool); saveCurrentJob('Saved tool'); });
+  $('saveFeedBtn').addEventListener('click', () => { state.feeds.unshift({ id: crypto.randomUUID(), date: new Date().toLocaleString(), label: $('feedLabel').value.trim() || 'Custom speed/feed', speed: $('gSpeed').value.trim(), feed: $('gFeed').value.trim() }); saveCurrentJob('Saved feed'); });
+  $('refreshGcodeBtn').addEventListener('click', () => { calculateMove(false); markUnsaved(); });
   $('copyGcodeBtn').addEventListener('click', async () => { try { await navigator.clipboard.writeText($('gcodeOut').textContent); touchStatus('Copied'); } catch (error) { alert('Copy failed. Long press and copy from the code box.'); } });
   $('exportJobBtn').addEventListener('click', () => { updateFromFields(); downloadJson('cnc-work-helper-job.json', { app: 'CNC Lathe Work Helper', version: 4, job: currentJob() }); });
   $('exportAllBtn').addEventListener('click', () => { updateFromFields(); downloadJson('cnc-work-helper-all.json', { app: 'CNC Lathe Work Helper', version: 4, ...state }); });

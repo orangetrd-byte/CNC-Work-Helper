@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cnc-lathe-work-helper-v49-drawer-layer-fix';
+const CACHE_NAME = 'cnc-lathe-work-helper-v50-manual-save';
 const ASSETS = [
   './',
   './index.html',
