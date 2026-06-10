@@ -15,6 +15,7 @@
     ['toolsView', 'Tools'],
     ['gcodeView', 'G-Code'],
     ['simView', 'Simulator'],
+    ['assistantView', 'Assistant'],
     ['referenceHubView', 'References']
   ];
   const referenceViews = [

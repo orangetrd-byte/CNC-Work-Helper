@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cnc-lathe-work-helper-v46-version-info';
+const CACHE_NAME = 'cnc-lathe-work-helper-v47-assistant-tab';
 const ASSETS = [
   './',
   './index.html',

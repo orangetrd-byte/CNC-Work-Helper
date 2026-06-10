@@ -78,7 +78,13 @@ Safety boundaries:
       hydrateKeyFields();
       return;
     }
-    const target = $('referenceHubView') || $('handbookView') || document.querySelector('main');
+    let target = $('assistantView');
+    if (!target) {
+      target = document.createElement('section');
+      target.id = 'assistantView';
+      target.className = 'view grid hidden';
+      document.querySelector('main')?.appendChild(target);
+    }
     target?.insertAdjacentHTML('beforeend', `
       <div id="geminiAssistantPanel" class="card span-2 ai-panel">
         <div class="section-head"><h2>Machinist Assistant</h2><span class="mini">Machining knowledge + current job context.</span></div>

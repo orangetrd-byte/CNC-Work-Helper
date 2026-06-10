@@ -322,12 +322,12 @@
     if ($('appVersionInfo')) return;
     $('handbookView')?.insertAdjacentHTML('beforeend', `
       <div id="appVersionInfo" class="card span-2 version-info-card">
-        <div class="section-head"><h2>Version Info</h2><span class="mini">PWA cache v45</span></div>
+        <div class="section-head"><h2>Version Info</h2><span class="mini">PWA cache v47</span></div>
         <div class="refGrid version-info-grid">
           <p><strong>App</strong><span>CNC Lathe Work Helper</span></p>
-          <p><strong>Version</strong><span>Navigation, Reference Search, and Validation Pass</span></p>
+          <p><strong>Version</strong><span>Assistant Tab and Navigation Cleanup</span></p>
           <p><strong>Updated</strong><span>June 10, 2026</span></p>
-          <p><strong>Includes</strong><span>Improved navigation, searchable references, common shop problem references, expanded G-code validation, saved-job filtering, machinist-focused Assistant, Lost Z face retouch helper, editable G-code editor, simulator plot, Quick Entry, macro snippets, setup notes, tool/feed library, and offline cache.</span></p>
+          <p><strong>Includes</strong><span>Dedicated Machinist Assistant tab, improved navigation, searchable references, common shop problem references, expanded G-code validation, saved-job filtering, Lost Z face retouch helper, editable G-code editor, simulator plot, Quick Entry, macro snippets, setup notes, tool/feed library, and offline cache.</span></p>
         </div>
       </div>`);
   }
