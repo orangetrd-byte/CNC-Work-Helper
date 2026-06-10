@@ -312,3 +312,20 @@ code {
   min-width: auto;
   padding: 9px 12px;
 }
+
+.uiux-tabs {
+  display: flex !important;
+  grid-template-columns: none !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none;
+}
+
+.uiux-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.uiux-tab {
+  flex: 0 0 auto !important;
+}

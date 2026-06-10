@@ -100,11 +100,13 @@
     return [...new Set(ids.filter(id => valid.has(id)))].slice(0, 20);
   }
   function isBlankJob(job) {
+    const gcodeOutput = String(job.gcode?.output || '').trim();
+    const hasUserGcode = gcodeOutput && !/^Enter (calculator values|or generate G-code)/i.test(gcodeOutput);
     return ![
       job.partNumber, job.material, job.operation, job.machine, job.toolNotes, job.setupNotes,
-      job.setup?.workOffset, job.setup?.stockDiameter, job.setup?.stockLength, job.setup?.chuckJaw, job.setup?.stickout, job.setup?.coolant, job.setup?.inspectionNotes, job.setup?.setupReference,
+      job.setup?.workOffset, job.setup?.stockDiameter, job.setup?.stockLength, job.setup?.chuckJaw, job.setup?.stickout, job.setup?.coolant, job.setup?.inspectionNotes, job.setup?.setupReference, job.setup?.pieJawNotes, job.setup?.pieJawSize, job.setup?.pieJawBore, job.setup?.pieJawStep,
       job.calculator?.touchDia, job.calculator?.targetDia, job.calculator?.plungeDepth,
-      job.tool?.label, job.feed?.label, job.gcode?.output
+      job.tool?.label, job.feed?.label, hasUserGcode ? gcodeOutput : ''
     ].some(value => String(value || '').trim());
   }
   function pickResumeJob(jobs) {
@@ -275,12 +277,13 @@
     $('activeToolSelect').value = id;
     $('gcodeToolSelect').value = id;
   }
+  const visibleJobs = () => state.jobs.filter(job => !isBlankJob(job));
   const jobTitle = job => job.partNumber || job.operation || job.machine || 'Untitled job';
   function renderJobs() {
-    const sorted = [...state.jobs].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    const sorted = visibleJobs().sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
     $('jobsList').innerHTML = sorted.map(job => `<div class="item"><strong>${escapeHtml(jobTitle(job))}</strong><span class="mini">${escapeHtml(new Date(job.updatedAt).toLocaleString())}</span><p>${escapeHtml([job.material,job.operation,job.machine].filter(Boolean).join('\n'))}</p><div class="row actions"><button type="button" onclick="loadJob('${job.id}')">Load</button><button class="ghost" type="button" onclick="duplicateJob('${job.id}')">Duplicate</button></div></div>`).join('') || '<p class="hint">No saved jobs yet.</p>';
     $('setupJobsList').innerHTML = sorted.map(job => `<div class="item"><strong>${escapeHtml(jobTitle(job))}</strong><span class="mini">${escapeHtml(new Date(job.updatedAt).toLocaleString())}</span><p>${escapeHtml([job.setup?.workOffset ? `Offset: ${job.setup.workOffset}` : '', job.setup?.stockDiameter ? `Stock: ${job.setup.stockDiameter}` : '', job.setup?.chuckJaw, job.setup?.setupReference].filter(Boolean).join('\n'))}</p><div class="row actions"><button type="button" onclick="loadJob('${job.id}')">Load Reference</button><button class="ghost" type="button" onclick="duplicateJob('${job.id}')">Duplicate</button></div></div>`).join('') || '<p class="hint">No saved job references yet.</p>';
-    $('recentJobsList').innerHTML = state.recentJobIds.map(id => state.jobs.find(job => job.id === id)).filter(Boolean).map(job => `<div class="item"><strong>${escapeHtml(jobTitle(job))}</strong><span class="mini">${escapeHtml(new Date(job.updatedAt).toLocaleString())}</span><button type="button" onclick="loadJob('${job.id}')">Load Job</button></div>`).join('') || '<p class="hint">No recent jobs yet.</p>';
+    $('recentJobsList').innerHTML = state.recentJobIds.map(id => state.jobs.find(job => job.id === id)).filter(job => job && !isBlankJob(job)).map(job => `<div class="item"><strong>${escapeHtml(jobTitle(job))}</strong><span class="mini">${escapeHtml(new Date(job.updatedAt).toLocaleString())}</span><button type="button" onclick="loadJob('${job.id}')">Load Job</button></div>`).join('') || '<p class="hint">No recent jobs yet.</p>';
   }
   function renderTools() {
     const tools = allTools();

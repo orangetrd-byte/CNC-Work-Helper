@@ -6,6 +6,12 @@
   const fmt = v => Number.isFinite(v) ? Number(v).toFixed(4).replace(/0+$/, '').replace(/\.$/, '') : '--';
   const read = () => { try { return JSON.parse(localStorage.getItem(storeKey) || '{}'); } catch { return {}; } };
   const jobs = () => Array.isArray(read().jobs) ? read().jobs : [];
+  const hasJobContent = job => {
+    const setup = job?.setup || {}, calc = job?.calculator || {}, tool = job?.tool || {}, feed = job?.feed || {}, gcode = job?.gcode || {};
+    const gcodeOutput = String(gcode.output || '').trim();
+    const hasUserGcode = gcodeOutput && !/^Enter (calculator values|or generate G-code)/i.test(gcodeOutput);
+    return [job?.partNumber, job?.material, job?.operation, job?.machine, job?.toolNotes, job?.setupNotes, setup.workOffset, setup.stockDiameter, setup.stockLength, setup.chuckJaw, setup.stickout, setup.coolant, setup.inspectionNotes, setup.setupReference, setup.pieJawNotes, setup.pieJawSize, setup.pieJawBore, setup.pieJawStep, calc.touchDia, calc.targetDia, calc.plungeDepth, tool.label, tool.width, tool.radius, tool.notes, feed.label, feed.speed, feed.feed, gcode.toolCall, gcode.rapidX, gcode.rapidZ, gcode.comment, hasUserGcode ? gcodeOutput : ''].some(value => String(value || '').trim());
+  };
   const codeText = () => $('gcodeEditor')?.value || $('gcodeOut')?.textContent || '';
   const click = id => $(id)?.click();
 
@@ -37,6 +43,7 @@
       $(viewId)?.classList.remove('hidden');
     }
     document.querySelectorAll('.uiux-tab').forEach(btn => btn.classList.toggle('active', btn.dataset.view === viewId));
+    if (viewId === 'notesView' || viewId === 'referenceHubView') window.__renderJobSearch?.();
   }
 
   function showReference(viewId) {
@@ -115,7 +122,14 @@
     const oldSet = Storage.prototype.setItem;
     if (!window.__uiuxSaveSignalPatched) {
       window.__uiuxSaveSignalPatched = true;
-      Storage.prototype.setItem = function(k, v) { const r = oldSet.apply(this, arguments); if (k === storeKey) setSaved(); return r; };
+      Storage.prototype.setItem = function(k, v) {
+        const r = oldSet.apply(this, arguments);
+        if (k === storeKey) {
+          setSaved();
+          window.__renderJobSearch?.();
+        }
+        return r;
+      };
     }
   }
 
@@ -137,7 +151,7 @@
     $('notesView')?.insertAdjacentHTML('beforeend', '<div class="card span-2 compact-job-search"><div class="section-head"><h2>Find Jobs</h2><span class="mini">Search saved jobs by part, material, or machine.</span></div><input id="jobSearchInputNotes" placeholder="Search jobs"><div id="jobSearchResults" class="list compact-results"></div></div>');
     const render = q => {
       const term = String(q || '').toLowerCase().trim();
-      const list = jobs().filter(j => !term || [j.partNumber, j.material, j.machine, j.operation].some(v => String(v || '').toLowerCase().includes(term))).slice(0, 25);
+      const list = jobs().filter(hasJobContent).filter(j => !term || [j.partNumber, j.material, j.machine, j.operation].some(v => String(v || '').toLowerCase().includes(term))).slice(0, 25);
       const html = list.map(j => `<button type="button" class="item search-job" data-job-id="${esc(j.id)}"><strong>${esc(j.partNumber || 'Untitled job')}</strong><span>${esc([j.material, j.machine, j.operation].filter(Boolean).join(' | '))}</span></button>`).join('') || '<p class="hint">No matching jobs.</p>';
       if ($('jobSearchResults')) $('jobSearchResults').innerHTML = html;
     };
@@ -145,6 +159,11 @@
       const term = String(q || '').toLowerCase().trim();
       ['jobsList','setupJobsList','recentJobsList'].forEach(id => $(id)?.querySelectorAll('.item').forEach(item => item.classList.toggle('filtered-out', !!term && !item.textContent.toLowerCase().includes(term))));
     }
+    window.__renderJobSearch = () => {
+      const q = $('jobSearchInputNotes')?.value || $('jobSearchInput')?.value || '';
+      render(q);
+      filterExistingLists(q);
+    };
     ['jobSearchInput','jobSearchInputNotes'].forEach(id => $(id)?.addEventListener('input', e => { render(e.target.value); filterExistingLists(e.target.value); }));
     $('jobSearchResults')?.addEventListener('click', e => {
       const id = e.target.closest('[data-job-id]')?.dataset.jobId;

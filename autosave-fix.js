@@ -20,13 +20,15 @@
 
   function isBlankJob(job) {
     const setup = job?.setup || {}, calc = job?.calculator || {}, tool = job?.tool || {}, feed = job?.feed || {}, gcode = job?.gcode || {};
+    const gcodeOutput = String(gcode.output || '').trim();
+    const hasUserGcode = gcodeOutput && !/^Enter (calculator values|or generate G-code)/i.test(gcodeOutput);
     return ![
       job?.partNumber, job?.material, job?.operation, job?.machine, job?.toolNotes, job?.setupNotes,
       setup.workOffset, setup.stockDiameter, setup.stockLength, setup.chuckJaw, setup.stickout, setup.coolant, setup.inspectionNotes, setup.setupReference, setup.pieJawNotes, setup.pieJawSize, setup.pieJawBore, setup.pieJawStep,
       calc.touchDia, calc.targetDia, calc.plungeDepth,
       tool.label, tool.width, tool.radius, tool.notes,
       feed.label, feed.speed, feed.feed,
-      gcode.toolCall, gcode.rapidX, gcode.rapidZ, gcode.comment, gcode.output
+      gcode.toolCall, gcode.rapidX, gcode.rapidZ, gcode.comment, hasUserGcode ? gcodeOutput : ''
     ].some(value => String(value || '').trim());
   }
 
