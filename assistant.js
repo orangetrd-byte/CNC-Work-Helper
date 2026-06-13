@@ -42,6 +42,127 @@ Safety boundaries:
     if ($('saveStatus')) $('saveStatus').textContent = text;
   }
 
+  function setLocalAnswer(text) {
+    if ($('assistantAnswer')) $('assistantAnswer').innerHTML = `<div class="mini">Local shop help</div>${esc(text).replace(/\n/g, '<br>')}`;
+    if ($('saveStatus')) $('saveStatus').textContent = 'Local shop help';
+  }
+
+  function localAssistantAnswer(rawQuestion) {
+    const q = String(rawQuestion || '').toLowerCase();
+    const has = (...terms) => terms.some(term => q.includes(term));
+    if (!q.trim()) return null;
+
+    if (has('diameter mode', 'radius mode', 'x mode', 'x diameter', 'x radius')) {
+      return `Most CNC lathes run X in diameter mode: the X value shown on the control is the part diameter, not how far the tool physically moves.
+
+Example: X2.000 to X1.500 changes the part diameter by .500, but the tool moves radially .250.
+
+If a control is in radius mode, X would represent tool distance from centerline instead. Verify G7/G8 or the machine setting before entering offsets.`;
+    }
+
+    if (has('setup notes', 'setup note', 'setup reference', 'setup tab', 'job notes')) {
+      return `Setup notes are the job memory for the next run.
+
+Use them for: jaw/chuck setup, work offset, Z0 location, stickout, stock size, tool touch-off notes, inspection checks, safe approach notes, and anything that surprised you.
+
+Save the job when the notes are ready. The app is now manual-save first, so typing does not commit changes until you tap Save Job.`;
+    }
+
+    if (has('saved job', 'saved jobs', 'load job', 'recent job', 'job library')) {
+      return `Saved jobs are stored locally on this device in browser storage.
+
+Use Save Job to commit the current notes, setup, tool/feed, calculator values, and G-code text. Use Load or Recent Jobs to bring a saved job back as a reference.
+
+Import/Export JSON is the safer way to move jobs between devices or keep backups.`;
+    }
+
+    if (has('production-ready g-code', 'production ready g-code', 'proper g code', 'proper g-code', 'can this generate', 'draft g-code', 'draft g code')) {
+      return `No. Treat app-generated G-code as draft/check-before-running assistance only.
+
+It can help format a starting point from calculator values, but it does not know your exact post, machine parameters, offsets, tool nose comp, jaws, chuck clearance, or shop rules.
+
+Before running anything: verify tool/offset, spindle, feed, work offset, X diameter/radius mode, Z sign, clearance, jaws/chuck, Distance-To-Go, and single block the first moves.`;
+    }
+
+    if (has('g-code check', 'gcode check', 'check g-code', 'check code', 'validation', 'warning')) {
+      return `The G-code checker is a rough helper, not a machine simulation.
+
+It looks for common issues such as missing tool call, missing spindle start, missing feed before G01, G96 without G50, unsupported codes, arc format issues, positive Z plunge questions, and X below zero.
+
+A clean check does not prove the program is safe. Verify at the control and dry-run/single-block per shop practice.`;
+    }
+
+    if (has('plot', 'preview', 'toolpath', 'simulate', 'simulator')) {
+      return `The plot/simulator is a rough X/Z visual aid.
+
+It helps you see feed moves, rapid moves, retracts, and approximate toolpath shape from the typed G-code. It is not collision-proof and does not model your turret, holder, jaws, chuck, insert shape, or machine limits.
+
+Use it to catch obvious direction mistakes, then verify the real move at the control.`;
+    }
+
+    if (has('x/z', 'xz', 'movement', 'move calculator', 'lathe move', 'radial travel', 'plunge')) {
+      return `The movement calculator assumes lathe X is diameter-based.
+
+Target X is the final diameter position. Z face is usually 0.000. A plunge into the part from the face is usually negative Z, such as Z-.500.
+
+Radial travel = absolute diameter change / 2. Example: X24.000 to X3.000 gives 21.000 diameter change and 10.500 radial tool movement.`;
+    }
+
+    if (has('tool library', 'tool libraries', 'tool selector', 'tool choice', 'insert', 'nose radius', 'db .187')) {
+      return `The tool library keeps common and custom tool data close to the job.
+
+Use it for tool label, insert/tool width, nose radius, station/offset notes, and setup cautions. Labels like DB .187 x .015 can be parsed as width .187 and radius .015.
+
+Still verify the physical insert and offset at the machine.`;
+    }
+
+    if (has('speed', 'feed', 'sfm', 'rpm', 'feeds and speeds')) {
+      return `Speeds and feeds in this app are quick-reference helpers.
+
+Use SFM/RPM and feed calculators to get a starting point, then adjust for material, insert grade, rigidity, stickout, coolant, interrupted cuts, and machine condition.
+
+Formula reminder: RPM = (SFM x 3.82) / diameter in inches.`;
+    }
+
+    if (has('drill', 'tap', 'tap drill', 'thread')) {
+      return `The drill/tap references are quick shop references.
+
+Use them to get a starting tap drill or thread value, then verify against your shop chart, thread class, material, tool brand, and print requirement.
+
+For 60-degree thread depth estimate: depth = 0.6495 / TPI.`;
+    }
+
+    if (has('import', 'export', 'json', 'backup')) {
+      return `Import/Export uses JSON files.
+
+Export a job when you want a backup or want to move it to another device. Import loads that JSON back into the app with notes, setup, calculator values, tool/feed, and G-code data preserved.
+
+For important jobs, export JSON instead of relying only on browser storage.`;
+    }
+
+    if (has('offline', 'pwa', 'install', 'home screen', 'service worker')) {
+      return `CNC Work Helper is a PWA. Once loaded and installed, the service worker caches the app so it can open offline.
+
+Job data is local to the browser/device. Updating the app may require a refresh after GitHub Pages publishes and the service worker cache changes.`;
+    }
+
+    if (has('version', 'build', 'mgp', 'cache')) {
+      return `Version/build information is shown at the bottom of the Reference/Codes area.
+
+Use that to confirm whether the installed PWA has picked up the latest cache version. If the app looks stale, refresh the browser/PWA after GitHub Pages finishes updating.`;
+    }
+
+    if (has('z0', 'z zero', 'retouch z', 'lost z', 'work shift', 'w-shift', 'jaw face')) {
+      return `For lost Z or retouching Z, do not blindly call a new surface Z0.
+
+Use a known surface and enter its true Z value for your setup. If Z0 is the jaw face and the part face is 1.602 from the jaw face, enter the true signed distance your machine convention requires, such as Z-1.602 in the Fanuc Work Shift measurement field if that is your shop convention.
+
+Verify on Absolute Position before cutting, then single-block the first move with low override.`;
+    }
+
+    return null;
+  }
+
   function maskKey(key) {
     if (!key) return '';
     if (key.length <= 10) return 'saved key';
@@ -144,11 +265,21 @@ Safety boundaries:
   }
 
   async function askGemini() {
+    const question = $('assistantQuestion')?.value.trim();
+    if (!question) { setAnswer('Type a question first.'); return; }
+
+    const local = localAssistantAnswer(question);
+    if (local) {
+      setLocalAnswer(local);
+      return;
+    }
+
     const key = $('geminiApiKey')?.value.trim() || savedKey();
     const model = $('geminiModel')?.value || savedModel();
-    const question = $('assistantQuestion')?.value.trim();
-    if (!key) { setAnswer('Add and save a Gemini API key first.'); return; }
-    if (!question) { setAnswer('Type a question first.'); return; }
+    if (!key) {
+      setAnswer('No built-in CNC Work Helper answer matched that question. Remote AI fallback requires a saved Gemini API key.');
+      return;
+    }
     if (!saveKey(false)) return;
     setAnswer('Asking Gemini...');
     const prompt = `${machinistSystemPrompt}

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cnc-lathe-work-helper-v54-mgp-build-info';
+const CACHE_NAME = 'cnc-lathe-work-helper-v55-local-assistant';
 const ASSETS = [
   './',
   './index.html',

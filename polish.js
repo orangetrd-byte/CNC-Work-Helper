@@ -323,12 +323,12 @@
     if ($('appVersionInfo')) return;
     $('handbookView')?.insertAdjacentHTML('beforeend', `
       <div id="appVersionInfo" class="card span-2 version-info-card">
-        <div class="section-head"><h2>Version Info</h2><span class="mini">PWA cache v53</span></div>
+        <div class="section-head"><h2>Version Info</h2><span class="mini">PWA cache v55</span></div>
         <div class="refGrid version-info-grid">
           <p><strong>App</strong><span>CNC Lathe Work Helper</span></p>
-          <p><strong>Version</strong><span>No Refresh Save</span></p>
+          <p><strong>Version</strong><span>Local Machinist Assistant Answers</span></p>
           <p><strong>Updated</strong><span>June 10, 2026</span></p>
-          <p><strong>Includes</strong><span>No refresh save, no startup save, Manual Save mode, full-screen mobile Recent Jobs drawer, stronger modal overlay, blank job cleanup, single-row mobile tabs, dedicated Machinist Assistant tab, improved navigation, searchable references, common shop problem references, expanded G-code validation, saved-job filtering, Lost Z face retouch helper, editable G-code editor, simulator plot, Quick Entry, macro snippets, setup notes, tool/feed library, and offline cache.</span></p>
+          <p><strong>Includes</strong><span>Local assistant answers before API fallback, no refresh save, no startup save, Manual Save mode, full-screen mobile Recent Jobs drawer, stronger modal overlay, blank job cleanup, single-row mobile tabs, dedicated Machinist Assistant tab, improved navigation, searchable references, common shop problem references, expanded G-code validation, saved-job filtering, Lost Z face retouch helper, editable G-code editor, simulator plot, Quick Entry, macro snippets, setup notes, tool/feed library, and offline cache.</span></p>
         </div>
       </div>`);
   }
