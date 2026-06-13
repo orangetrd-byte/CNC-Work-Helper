@@ -15,3 +15,8 @@ Phase 1: Shop-Floor Utility Stability
 - Verify reference and calculator behavior after UI polish.
 - Keep generated or checked G-code labeled as draft assistance.
 - Add improvements only when they help a machinist make a shop-floor decision quickly.
+## Permanent Version Rule
+
+- Every version/build update must keep the letters MGP visible in the app's build or version information.
+- MGP cannot be removed, hidden, renamed, or replaced during future updates.
+- If version text is redesigned, MGP must move with the version/build information.
