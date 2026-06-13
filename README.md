@@ -48,3 +48,19 @@ Open `index.html` directly for basic testing, or serve the folder with a local s
 - `sw.js` - offline cache service worker
 - `icons/` - app, favicon, and UI icon assets
 - `README.md` - project notes
+## Assistant Change Guidelines
+
+Before making code or file changes in this repo:
+
+1. Clarify the machinist-helper goal, assumptions, constraints, and measurable success criteria.
+2. Use structured output for technical explanations, setup guidance, troubleshooting, risks, and workflow changes.
+3. Compare options before changing calculators, G-code assistance, references, storage, dependencies, or AI behavior.
+4. Keep brainstorming practical and shop-floor focused; do not use it to bypass machining safety or validation.
+5. Give technical explanations when changing calculations, G-code checks, plotting, setup logic, references, or assistant fallback paths.
+6. Draft concise documentation or handoff notes for user-facing workflow changes.
+7. Use a troubleshooting checklist before fixing bugs in setup notes, saved jobs, calculators, import/export, or PWA behavior.
+8. Add learning-path style content only when it supports safe app usage; keep full lessons in the tutorial repo.
+9. Assess risks before adding automation, AI fallback, generated G-code, calculation changes, or reference changes.
+10. Optimize only for a named goal such as reliability, readability, speed, offline use, or shop-floor clarity.
+
+Permanent rule: MGP must remain visible in build/version information and cannot be removed, hidden, renamed, or replaced.
