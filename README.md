@@ -48,6 +48,23 @@ Open `index.html` directly for basic testing, or serve the folder with a local s
 - `sw.js` - offline cache service worker
 - `icons/` - app, favicon, and UI icon assets
 - `README.md` - project notes
+## Current Project Status
+
+**Status as of June 27, 2026:** Active machinist-helper repo.
+
+CNC Work Helper is the practical shop helper for CNC lathe work. It is separate from Helper and Green Hat. This repo is for more capable shop-floor utilities, saved jobs, setup references, calculators, plotting aids, and draft G-code assistance.
+
+Where it stands:
+
+- Core workflow is built around job notes, setup reference, lathe move calculations, tool/feed libraries, saved jobs, import/export, and offline use.
+- Generated G-code and plots are draft aids only and must remain clearly safety-labeled.
+- This repo can support experienced-user tools that would be too advanced for Green Hat.
+- MGP build/version information must remain visible and cannot be removed.
+
+Next practical focus:
+
+- Improve reliability, validation, saved-job flow, calculator clarity, and safety checks before adding larger new features.
+
 ## Assistant Change Guidelines
 
 Before making code or file changes in this repo:
@@ -64,3 +81,4 @@ Before making code or file changes in this repo:
 10. Optimize only for a named goal such as reliability, readability, speed, offline use, or shop-floor clarity.
 
 Permanent rule: MGP must remain visible in build/version information and cannot be removed, hidden, renamed, or replaced.
+
