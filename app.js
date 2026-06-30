@@ -18,13 +18,14 @@
   ];
   const blankJob = () => ({
     id: crypto.randomUUID(), partNumber: '', material: '', operation: '', machine: '', toolNotes: '', setupNotes: '',
-    setup: { workOffset: '', stockDiameter: '', stockLength: '', chuckJaw: '', stickout: '', coolant: '', inspectionNotes: '', setupReference: '' },
+    setup: { workOffset: '', stockDiameter: '', stockLength: '', chuckJaw: '', stickout: '', coolant: '', inspectionNotes: '', setupReference: '', pieJawNotes: '', pieJawSize: '', pieJawBore: '', pieJawStep: '', setupPhotoName: '', setupPhotoData: '' },
     calculator: { mode: 'od', touchDia: '', targetDia: '', faceZ: '0.000', plungeDepth: '', zDirection: 'minus' },
     tool: { label: '', width: '', radius: '', notes: '' }, feed: { label: '', speed: '', feed: '' },
-    gcode: { toolCall: '', rapidX: '', rapidZ: '', comment: '', output: '' }, lastMove: null,
+    gcode: { toolCall: '', rapidX: '', rapidZ: '', comment: '', output: '' }, lastMove: null, events: [],
     createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
   });
   const baseState = () => ({ jobs: [], currentJobId: null, tools: [], feeds: [], recentJobIds: [] });
+
   const fmt = value => Number.isFinite(value) ? Number(value).toFixed(3).replace(/^-0\.000$/, '0.000') : '--';
   const num = value => {
     const cleaned = String(value ?? '').trim().replace(/^\./, '0.').replace(/^-\./, '-0.');
