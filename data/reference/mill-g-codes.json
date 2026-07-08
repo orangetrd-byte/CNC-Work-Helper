@@ -1,0 +1,22 @@
+{
+  "category": "cnc_milling",
+  "type": "g_codes",
+  "items": [
+    { "code": "G00", "description": "Rapid positioning", "group": "01", "params": "X Y Z" },
+    { "code": "G01", "description": "Linear interpolation", "group": "01", "params": "X Y Z F" },
+    { "code": "G02", "description": "CW circular interpolation", "group": "01", "params": "X Y Z I J K or R" },
+    { "code": "G03", "description": "CCW circular interpolation", "group": "01", "params": "X Y Z I J K or R" },
+    { "code": "G04", "description": "Dwell", "group": "00", "params": "P or X" },
+    { "code": "G17", "description": "XY plane selection", "group": "02" },
+    { "code": "G40", "description": "Cutter compensation cancel", "group": "07" },
+    { "code": "G41", "description": "Cutter compensation left", "group": "07" },
+    { "code": "G42", "description": "Cutter compensation right", "group": "07" },
+    { "code": "G43", "description": "Tool length compensation +", "group": "08" },
+    { "code": "G49", "description": "Tool length compensation cancel", "group": "08" },
+    { "code": "G54", "description": "Work offset 1", "group": "12" },
+    { "code": "G80", "description": "Canned cycle cancel" },
+    { "code": "G81", "description": "Drilling cycle" },
+    { "code": "G90", "description": "Absolute positioning" },
+    { "code": "G91", "description": "Incremental positioning" }
+  ]
+}
