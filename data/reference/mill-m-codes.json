@@ -1,0 +1,13 @@
+{
+  "category": "cnc_milling",
+  "type": "m_codes",
+  "items": [
+    { "code": "M00", "description": "Program stop" },
+    { "code": "M03", "description": "Spindle CW" },
+    { "code": "M05", "description": "Spindle stop" },
+    { "code": "M06", "description": "Tool change" },
+    { "code": "M08", "description": "Flood coolant ON" },
+    { "code": "M09", "description": "Coolant OFF" },
+    { "code": "M30", "description": "End of program and reset" }
+  ]
+}
