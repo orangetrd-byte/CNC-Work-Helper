@@ -1,0 +1,14 @@
+{
+  "category": "cnc_turning",
+  "type": "g_codes",
+  "items": [
+    { "code": "G00", "description": "Rapid" },
+    { "code": "G01", "description": "Linear feed" },
+    { "code": "G02", "description": "CW arc" },
+    { "code": "G03", "description": "CCW arc" },
+    { "code": "G71", "description": "Stock removal turning" },
+    { "code": "G76", "description": "Threading cycle" },
+    { "code": "G96", "description": "Constant surface speed" },
+    { "code": "G97", "description": "Constant RPM" }
+  ]
+}
