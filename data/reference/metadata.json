@@ -1,0 +1,9 @@
+{
+  "title": "CNC Reference Package",
+  "version": "1.0",
+  "brands": [
+    "Fanuc",
+    "Haas"
+  ],
+  "notes": "Summarized shop reference data for CNC Work Helper. Verify machine specific details with the correct manual."
+}
