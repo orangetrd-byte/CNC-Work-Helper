@@ -1,0 +1,10 @@
+{
+  "category": "3d_printing_marlin",
+  "type": "g_codes",
+  "items": [
+    { "code": "G0/G1", "description": "Linear move", "params": "X Y Z E F" },
+    { "code": "G28", "description": "Auto home" },
+    { "code": "G29", "description": "Bed leveling" },
+    { "code": "G90", "description": "Absolute positioning" }
+  ]
+}
