@@ -1,0 +1,9 @@
+{
+  "category": "symbols",
+  "type": "operation_sheet_symbols",
+  "items": [
+    { "symbol": "OP", "meaning": "Operation" },
+    { "symbol": "SU", "meaning": "Setup" },
+    { "symbol": "QC", "meaning": "Quality check" }
+  ]
+}
