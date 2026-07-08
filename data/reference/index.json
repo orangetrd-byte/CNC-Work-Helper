@@ -1,0 +1,16 @@
+{
+  "title": "CNC Work Helper Reference Index",
+  "version": "1.0",
+  "files": [
+    { "file": "metadata.json", "category": null, "type": null, "count": null },
+    { "file": "mill-g-codes.json", "category": "cnc_milling", "type": "g_codes", "count": 16 },
+    { "file": "mill-m-codes.json", "category": "cnc_milling", "type": "m_codes", "count": 7 },
+    { "file": "lathe-g-codes.json", "category": "cnc_turning", "type": "g_codes", "count": 8 },
+    { "file": "lathe-m-codes.json", "category": "cnc_turning", "type": "m_codes", "count": 3 },
+    { "file": "programming-symbols.json", "category": "symbols", "type": "programming_symbols", "count": 9 },
+    { "file": "blueprint-gdt-symbols.json", "category": "symbols", "type": "blueprint_symbols", "count": 5 },
+    { "file": "operation-sheet-symbols.json", "category": "symbols", "type": "operation_sheet_symbols", "count": 3 },
+    { "file": "marlin-3d-printer-g-codes.json", "category": "3d_printing_marlin", "type": "g_codes", "count": 4 },
+    { "file": "marlin-3d-printer-m-codes.json", "category": "3d_printing_marlin", "type": "m_codes", "count": 3 }
+  ]
+}
