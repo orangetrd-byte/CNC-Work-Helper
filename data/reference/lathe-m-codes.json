@@ -1,0 +1,9 @@
+{
+  "category": "cnc_turning",
+  "type": "m_codes",
+  "items": [
+    { "code": "M03", "description": "Spindle CW" },
+    { "code": "M04", "description": "Spindle CCW" },
+    { "code": "M05", "description": "Spindle stop" }
+  ]
+}
