@@ -1,0 +1,9 @@
+{
+  "category": "3d_printing_marlin",
+  "type": "m_codes",
+  "items": [
+    { "code": "M104/M109", "description": "Hotend temperature" },
+    { "code": "M140/M190", "description": "Bed temperature" },
+    { "code": "M106", "description": "Fan speed" }
+  ]
+}
