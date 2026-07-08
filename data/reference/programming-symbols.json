@@ -1,0 +1,15 @@
+{
+  "category": "symbols",
+  "type": "programming_symbols",
+  "items": [
+    { "symbol": "N", "meaning": "Sequence number" },
+    { "symbol": "G", "meaning": "Preparatory code" },
+    { "symbol": "M", "meaning": "Miscellaneous code" },
+    { "symbol": "X Y Z", "meaning": "Coordinates" },
+    { "symbol": "F", "meaning": "Feedrate" },
+    { "symbol": "S", "meaning": "Spindle speed" },
+    { "symbol": "T", "meaning": "Tool selection" },
+    { "symbol": "I J K", "meaning": "Arc center" },
+    { "symbol": "parentheses or semicolon", "meaning": "Comment" }
+  ]
+}
